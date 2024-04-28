@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <title>Sensitivity process</title>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>Sensitivity</h1>
+        <!-- Add a table to display sensitivity analysis results -->
+        <table id="sensitivityTable" class="table mt-4" >
+            <thead>
+                <tr>
+                    <th>Case</th>
+                    {% for subcriterion, weight in criteria_weights_sen.items() %}
+                        <th>{{ subcriterion }}</th>
+                    {% endfor %}
+
+                </tr>
+            </thead>
+            <tbody>
+                {% for sensitivity_case in results_sensitivity_sen %}
+                    <tr>
+                        <td>
+                            {% if loop.last %}
+                                Equal
+                            {% else %}
+                                {{ loop.index }}
+                            {% endif %}
+                        </td>
+                        {% for subcriterion, weight in sensitivity_case["criteria_weights"].items() %}
+                            <td>{{ weight }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

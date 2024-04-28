@@ -63,6 +63,9 @@
                 {% endfor %}
             </tbody>
         </table>
+        
+        
+        <a href="{{ url_for('sensitivity') }}" class="btn btn-primary">Next</a>
     </div>
 
     <!-- jQuery script for toggling visibility of the additional table -->
@@ -71,6 +74,12 @@
         $(document).ready(function() {
             $('#toggleTableBtn').click(function() {
                 $('#distanceTable').toggle();
+            });
+        });
+
+        $(document).ready(function() {
+            $('#toggleTableBtn').click(function() {
+                $('#sensitivityTable').toggle();
             });
         });
     </script>

@@ -35,6 +35,7 @@ def sub_cri_results():
         total_weights.append(total_weight)
     return render_template('sub_cri_results.html', results=results, result_criterias=result_criterias, total_weights=total_weights)
 
+
 @app.route('/cri_results')
 def cri_results():
 
@@ -860,14 +861,22 @@ def process_topsis():
 
 #     return render_template('topsis_results.html', criteria_weights=criteria_weights, weighted_normalized_decision_matrix=weighted_normalized_decision_matrix)
 
+criteria_weights_sen = {}
+
+results_sensitivity_sen ={}
 
 import math
+
+
+
 
 @app.route('/negative_postive_alter', methods=['POST'])
 def negative_postive_alter():
     # Get the form data
     global alternative_noms
     global weight_dic
+    global criteria_weights_sen 
+    global results_sensitivity_sen 
     criteria_weights = {}
     weighted_normalized_decision_matrix = defaultdict(list)
     maximize_minimize2 = {}
@@ -964,10 +973,49 @@ def negative_postive_alter():
         print("Rank", rank, "-", alternative, ": Closeness Coefficient =", closeness_coefficient)
         alternative_ranks[alternative] = rank
 
+
+    # Now you have 15 cases of sensitivity analysis stored in the 'results' list
     # Get the optimal alternative (the one with the highest relative closeness coefficient)
     optimal_alternative, optimal_closeness_coefficient = ranked_alternatives[0]
     print("\nOptimal Alternative:", optimal_alternative)
     print("Alternative Ranks:", alternative_ranks)
+    # Iterate over each subcriterion except the first one
+    results_sensitivity = []
+    subcriteria = list(criteria_weights.keys())
+    print("length of subcriteria:", len(subcriteria))
+        # Case 1: Constant weights
+    results_sensitivity.append({
+        "criteria_exchange": ("Constant", "No Change"),
+        "criteria_weights": criteria_weights.copy()  # Copy original weights
+    })
+
+    # Iterate over each subcriterion except the first one
+    for j in range(1, len(subcriteria)):
+        # Create a copy of the criteria weights
+        modified_weights = dict(criteria_weights)
+        
+        # Exchange the weight of the first subcriterion with the weight of the current subcriterion
+        modified_weights[subcriteria[0]], modified_weights[subcriteria[j]] = modified_weights[subcriteria[j]], modified_weights[subcriteria[0]]
+        print("{",modified_weights[subcriteria[0]],",",modified_weights[subcriteria[j]],"}")
+        # Store the results for this case
+        results_sensitivity.append({
+            "criteria_exchange": (subcriteria[0], subcriteria[j]),
+            "criteria_weights": modified_weights
+        })
+
+    # Row with equal weights
+    equal_weight = {subcriterion: round(1 / len(subcriteria), 4) for subcriterion in subcriteria}
+    results_sensitivity.append({
+        "criteria_exchange": ("Equal", "Weights"),
+        "criteria_weights": equal_weight
+    })
+    # Print the results
+    print("*****************************************************")
+    print("results_sensitivity:", results_sensitivity)
+
+    criteria_weights_sen = criteria_weights 
+    results_sensitivity_sen = results_sensitivity
+
     return render_template('topsis_results.html', 
                            criteria_weights=criteria_weights, 
                            weighted_normalized_decision_matrix=weighted_normalized_decision_matrix,
@@ -981,45 +1029,16 @@ def negative_postive_alter():
                            positive_distance=positive_distances,
                            negative_distance=negative_distances,
                            relative_closeness_coefficient=relative_closeness_coefficients,
-                           alternative_ranks=alternative_ranks)
+                           alternative_ranks=alternative_ranks,
+                           results_sensitivity=results_sensitivity)
+@app.route('/sensitivity')
+def sensitivity():
+    print("sensitivity roooooooooooute ***********")
+    print("criteria_weights_sen",criteria_weights_sen)
+    print("results_sensitivity_sen",results_sensitivity_sen)
 
-def euclidean_distance_to_A_star(alternative_values, A_star_values):
-    """
-    Calculate the Euclidean distance of each alternative from the positive ideal solution (A*).
-    
-    Args:
-    - alternative_values (dict): Dictionary containing the values of each alternative for each sub-criterion.
-    - A_star_values (dict): Dictionary containing the values of A* for each sub-criterion.
-    
-    Returns:
-    - distances (dict): Dictionary containing the Euclidean distance of each alternative from A*.
-    """
-    distances = {}
-    for alternative, values in alternative_values.items():
-        distance = 0
-        for subcriterion, value in values.items():
-            distance += (value - A_star_values[subcriterion]) ** 2
-        distances[alternative] = math.sqrt(distance)
-    return distances
-
-def euclidean_distance_to_A_minus(alternative_values, A_minus_values):
-    """
-    Calculate the Euclidean distance of each alternative from the negative ideal solution (A-).
-    
-    Args:
-    - alternative_values (dict): Dictionary containing the values of each alternative for each sub-criterion.
-    - A_minus_values (dict): Dictionary containing the values of A- for each sub-criterion.
-    
-    Returns:
-    - distances (dict): Dictionary containing the Euclidean distance of each alternative from A-.
-    """
-    distances = {}
-    for alternative, values in alternative_values.items():
-        distance = 0
-        for subcriterion, value in values.items():
-            distance += (value - A_minus_values[subcriterion]) ** 2
-        distances[alternative] = math.sqrt(distance)
-    return distances
+    return render_template('sensitivity.html',criteria_weights_sen=criteria_weights_sen,
+    results_sensitivity_sen=results_sensitivity_sen)
 
 @app.route('/get_subcriteria_names')
 def get_subcriteria_names():
