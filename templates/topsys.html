@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TOPSIS Alternatives and Criteria Input</title>
+    <!-- Add Bootstrap for styling -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Add your custom styles here */
+    </style>
+</head>
+<body>
+    <div class="container mt-4" id="app">
+        <div class="row">
+            <div class="col-md-6">
+                <input type="number" id="numAlternatives" placeholder="Number of Alternatives:">
+                <button class="btn btn-primary" onclick="addAlternatives()">Add Alternatives</button>
+                <div id="alternatives"></div>
+            </div>
+            <div class="col-md-6" id="criteriaSection"></div>
+        </div>
+        <button class="btn btn-success mt-3" onclick="submitData()">Submit Data</button>
+    </div>
+
+    <script>
+        function addAlternatives() {
+            var numAlternatives = document.getElementById('numAlternatives').value;
+            var alternativesDiv = document.getElementById('alternatives');
+            alternativesDiv.innerHTML = '';  // Clear existing alternatives
+            for (let i = 0; i < numAlternatives; i++) {
+                alternativesDiv.innerHTML += `<input type="text" placeholder="Alternative ${i + 1}" class="form-control mb-2" id="alternative${i}">`;
+            }
+        }
+
+        function submitData() {
+           /* let alternatives = [];
+            const numAlternatives = document.getElementById('numAlternatives').value;
+            for (let i = 0; i < numAlternatives; i++) {
+                let altValue = document.getElementById(`alternative${i}`).value;
+                if (altValue) {
+                    alternatives.push(altValue);
+                }
+            }
+
+            let queryString = alternatives.map((alt, index) => `alternative${index}=${encodeURIComponent(alt)}`).join('&');
+            window.location.href = `/topsyss?${queryString}`;*/
+                //window.location.href = `/topsyss?numAlternatives=${numAlternatives}`;
+
+
+            const numAlternatives = document.getElementById('numAlternatives').value;
+
+            const form = document.createElement('form');
+            form.method = 'post';
+            form.action = '{{ url_for("show_topsis_form") }}'; // Adjust this if your route name is different
+
+            // form.action = '/topsyss';  // The Flask route that will handle the form submission
+
+
+            for (let i = 0; i < numAlternatives; i++) {
+            let altValue = document.getElementById(`alternative${i}`).value;
+            if (altValue) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = `alternative${i}`;
+                input.value = altValue;
+                form.appendChild(input);
+            }
+        }
+            // Append hidden fields to the form for each alternative
+           /* alternatives.forEach((alt, index) => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = `alternative${index}`;
+                input.value = alt;
+                form.appendChild(input);
+            });*/
+
+            // Append a hidden field for the number of alternatives
+            const numInput = document.createElement('input');
+            numInput.type = 'hidden';
+            numInput.name = 'numAlternatives';
+            numInput.value = numAlternatives;
+            form.appendChild(numInput);
+
+
+            // Append the form to the body and submit it
+            document.body.appendChild(form);
+            form.submit();
+            /*let criteria = []; // Assume you have a similar function to collect criteria
+
+            // Send data to Flask using fetch API
+            fetch('/submit_data', {
+                method: 'POST',
+                body: JSON.stringify({ alternatives, criteria }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => response.json())
+              .then(data => {
+                  // Handle response data
+                  console.log(data);
+              });*/
+        }
+    </script>
+
+    <!-- Add Bootstrap JS and its dependencies -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+</html>

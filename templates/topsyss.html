@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TOPSIS Analysis Input</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-4">
+        <form id="topsisForm" action="{{ url_for('process_topsis') }}" method="post">
+            <div class="row">
+                <div class="col">
+                    <h2>Input values of the TOPSIS analysis</h2>
+                    
+                    {% for criteria_tuple,i in zip(result_criterias, range(results[0]|length)[::-1]) %}
+                    {% set criteria_name, subcriteria_list, weights, _, _, ranking, _ ,_= criteria_tuple %}
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Criteria</th>
+                                <th>Weights</th>
+                                {% for alternative in alternatives %}
+                                <th>{{ alternative }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            {% for subcriterion in  subcriteria_list %}
+                            <tr>
+                                <td>{{ subcriterion.name }}</td>
+                                <td>{{ "{:.4f}".format( (criteria_tuple[3][loop.index0]) * (results[2][i]) )   }}
+                                    <input type="hidden" name="subcriterion_weight_{{ subcriterion.name }}" value="{{ '%.4f'|format((criteria_tuple[3][loop.index0]) * (results[2][i])) }}">
+
+                                </td>
+                                
+                                
+                                {% for alternative in alternatives %}
+                                <td>
+                                    <input type="number" name="alternative_values_{{ subcriterion.name }}_{{ alternative }}" class="form-control">
+                                </td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    
+                    {% endfor %}
+
+
+                    <button type="submit" class="btn btn-primary">Calculate TOPSIS</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,1032 @@
+from flask import Flask, request, render_template, redirect, url_for, flash, session
+import numpy as np
+from fractions import Fraction
+import json
+import psycopg2
+import numpy as np
+import psycopg2.extras
+from werkzeug.security import generate_password_hash, check_password_hash
+import re
+from collections import OrderedDict
+from collections import defaultdict
+import math
+
+weight_dic = dict
+# oussamaaaaa
+# ededededed
+app = Flask(__name__)
+app.secret_key = 'oLjJcqqvOY'
+num = 0
+# Custom filter to mimic enumerate function in Jinja2 templates
+def jinja2_enumerate(iterable, start=0):
+    return enumerate(iterable, start=start)
+
+
+@app.route('/sub_cri_results')
+def sub_cri_results():
+
+    total_weights = []
+    results = get_last_inserted_result()
+    result_criterias = get_last_inserted_result_criteria()
+
+    # Calculate total weight for each criteria
+    for criteria_tuple in result_criterias:
+        total_weight = sum(criteria_tuple[3])  # Sum of weights for the current criteria
+        total_weights.append(total_weight)
+    return render_template('sub_cri_results.html', results=results, result_criterias=result_criterias, total_weights=total_weights)
+
+@app.route('/cri_results')
+def cri_results():
+
+    total_weights = []
+    results = get_last_inserted_result()
+    result_criterias = get_last_inserted_result_criteria()
+
+    # Calculate total weight for each criteria
+    for criteria_tuple in result_criterias:
+        total_weight = sum(criteria_tuple[3])  # Sum of weights for the current criteria
+        total_weights.append(total_weight)
+    return render_template('cri_results.html', results=results, result_criterias=result_criterias, total_weights=total_weights)
+
+# Add the zip function to Jinja's global namespace
+app.jinja_env.globals['zip'] = zip
+
+
+# Register the custom filter as a global function
+app.jinja_env.globals['jinja2_enumerate'] = jinja2_enumerate
+app.jinja_env.globals['enumerate'] = enumerate
+
+
+@app.route('/topsys')
+def topsys():
+    # You can render a template or return a response
+    if request.method == 'POST':
+        # Assuming the form data containing alternatives is named 'alternatives'
+        alternatives = request.form.getlist('alternatives')
+        return redirect(url_for('show_topsis_form', alternatives=alternatives))
+    return render_template('topsys.html')
+'''
+@app.route('/topsyss')
+def topsyss():
+    # You can render a template or return a response
+    #return render_template('topsyss.html')
+'''
+@app.template_filter('parse_json')
+def parse_json(value):
+    try:
+        return json.loads(value)
+    except json.JSONDecodeError:
+        return None
+
+class Criteria:
+    def __init__(self, name):
+        self.name = name
+        self.sub_criteria = []
+        self.matrix = None
+        self.weights = None
+        self.consistent = False
+        self.CR = None
+        self.ranking = None
+        
+
+    def __str__(self):
+        return self.name
+
+    def add_criteria(self, sub_criteria):
+        self.sub_criteria = sub_criteria
+
+
+    def calculate_weights(self, comparisons):
+        matrix = np.array(comparisons)
+        num_subcriteria = matrix.shape[0]
+        weights = np.zeros(num_subcriteria)
+
+        # Calculate weights using the eigenvalue method
+        eigvals, eigvecs = np.linalg.eig(matrix)
+        max_index = eigvals.argmax()
+        max_eigvec = eigvecs[:, max_index].real
+        weights = max_eigvec / max_eigvec.sum()
+        self.weights = weights
+        return weights
+
+    def calculate_rankings(self, weights):
+        # Calculate rankings based on the weights
+        rankings = np.argsort(-np.array(weights)) + 1
+        return rankings
+
+    def check_consistency(self):
+        n = self.matrix.shape[0]
+        eigvals = np.linalg.eigvals(self.matrix)
+        lambda_max = np.max(np.real(eigvals))
+        CI = (lambda_max - n) / (n - 1)
+        RI_values = [0.52, 1.12, 1.12, 1.24, 1.32, 1.41, 1.45,1.49,1.51]  # Include 0 for one criterion
+
+        RI = RI_values[n-1]
+        print("dddddddddddddddd",RI)
+        CR = CI / RI
+        if RI == 0:
+            raise ValueError("Random Index (RI) cannot be zero")
+        CR = CI / RI
+        self.consistent = CR < 0.1
+        self.CR = CR
+    
+    def calculate_normalized_subcriteria_weights(self, weights):
+        # Normalize the weights
+        normalized_weights = weights / np.sum(weights)
+        return normalized_weights
+
+    def normalize_matrix(self):
+        self.matrix = self.matrix / np.sqrt(np.sum(self.matrix ** 2, axis=0))
+    
+    
+
+global_num_criteria = 0
+class Product:
+    def __init__(self): 
+        self.criteria = []
+        self.compared_pairs = set()
+        self.matrix = None
+        self.weights = None
+        self.consistent = False
+        self.CR = None
+        self.ranking = None
+        self.topsis_ranking = None
+        self.ideal_solution =None
+        self.negative_ideal_solution = None
+        self.relative_closeness = None
+        self.alternatives_scores = {}
+
+    def add_alternative_scores(self, alternative_name, scores):
+        self.alternatives_scores[alternative_name] = scores
+
+    '''@app.route('/process_topsis', methods=['POST'])
+    def process_topsis():
+        # Assuming you've sent the data in the format alternative_criterion
+        processed_data = {}
+        for key in request.form:
+            alternative, criterion = key.split('_')
+            if alternative not in processed_data:
+                processed_data[alternative] = {}
+            processed_data[alternative][criterion] = request.form[key]'''
+
+    def calculate_rankings(self):
+        self.ranking = np.argsort(-self.weights) + 1
+
+    def add_criteria(self, criteria):
+        self.criteria = criteria
+
+    
+    def compare_criteria(self, form_data):
+        print("Inside compare_criteria method") 
+        num_criteria = len(self.criteria)
+        num=num_criteria
+        self.matrix = np.ones((num_criteria, num_criteria))
+        print("num_criteria",num_criteria)
+
+        for i in range(num_criteria):
+            for j in range(i + 1, num_criteria):
+                key = f'c{i+1}c{j+1}'
+                comparison_value = form_data.get(key)
+                print("key",key)
+                print("comparison_value",comparison_value)
+                print(f"Comparing criteria {i+1} and {j+1}. Key: {key}, Value: {comparison_value}")
+                if comparison_value is None or comparison_value == '':
+                    flash(f"Comparison value between criteria {i+1} and {j+1} is missing.")
+                    return False
+                try:
+                    comparison_value = float(comparison_value)
+                except ValueError:
+                    flash(f"Comparison value between criteria {i+1} and {j+1} is not a valid number.")
+                    return False
+                self.matrix[i, j] = comparison_value
+                self.matrix[j, i] = 1 / comparison_value
+                self.compared_pairs.add((min(i, j), max(i, j)))
+                if (j, i) not in self.compared_pairs:
+                    inverse_value = 1 / comparison_value
+                    form_data[f'c{j+1}c{i+1}'] = str(inverse_value)
+        return True
+
+    def number_criteria(self):
+        num = len(self.criteria)
+        global_num_criteria = num
+        return num
+        
+
+    def calculate_weights(self):
+        eigvals, eigvecs = np.linalg.eig(self.matrix)
+        max_index = eigvals.argmax()
+        max_eigvec = eigvecs[:, max_index].real
+        self.weights = max_eigvec / max_eigvec.sum()
+
+    def check_consistency(self):
+        n = self.matrix.shape[0]
+        eigvals = np.linalg.eigvals(self.matrix)
+        lambda_max = np.max(np.real(eigvals))
+        CI = (lambda_max - n) / (n - 1)
+        RI_values = [0.52, 0.89, 1.12, 1.24, 1.32, 1.41, 1.45]
+        RI = RI_values[n-1]
+        if RI == 0:
+            raise ValueError("Random Index (RI) cannot be zero")
+        CR = CI / RI
+        self.consistent = CR < 0.1
+        self.CR = CR
+    
+    def perform_topsis(self):
+        # Step 1: Normalize the decision matrix
+        normalized_matrix = self.normalize_matrix(self.matrix)
+
+        # Step 2: Determine the weighted normalized decision matrix
+        weighted_normalized_matrix = self.calculate_weighted_matrix(normalized_matrix)
+
+        # Step 3: Identify the ideal and negative ideal solutions
+        self.ideal_solution = self.calculate_ideal_solution(weighted_normalized_matrix)
+        self.negative_ideal_solution = self.calculate_negative_ideal_solution(weighted_normalized_matrix)
+
+        # Step 4: Calculate the distance of each alternative from the ideal and negative ideal solutions
+        self.distances = self.calculate_distances(weighted_normalized_matrix, self.ideal_solution, self.negative_ideal_solution)
+
+        # Step 5: Calculate the relative closeness to the ideal solution for each alternative
+        self.relative_closeness = self.calculate_relative_closeness(self.distances)
+
+        # Step 6: Rank the alternatives based on their relative closeness values
+        self.topsis_ranking = np.argsort(self.relative_closeness) + 1
+
+
+    def normalize_matrix(self, matrix):
+        norm_matrix = matrix / np.sqrt(np.sum(matrix ** 2, axis=0))
+        return norm_matrix
+
+    def calculate_weighted_matrix(self, normalized_matrix):
+        weighted_matrix = normalized_matrix * self.weights
+        return weighted_matrix
+
+    def calculate_ideal_solution(self, weighted_normalized_matrix):
+        ideal_solution = np.max(weighted_normalized_matrix, axis=0)
+        self.ideal_solution = ideal_solution
+        return ideal_solution
+
+    def calculate_negative_ideal_solution(self, weighted_normalized_matrix):
+        negative_ideal_solution = np.min(weighted_normalized_matrix, axis=0)
+        self.negative_ideal_solution = negative_ideal_solution
+        return negative_ideal_solution
+
+    def calculate_distances(self, weighted_normalized_matrix, ideal_solution, negative_ideal_solution):
+        dist_ideal = np.sqrt(np.sum((weighted_normalized_matrix - ideal_solution) ** 2, axis=1))
+        dist_negative_ideal = np.sqrt(np.sum((weighted_normalized_matrix - negative_ideal_solution) ** 2, axis=1))
+        return dist_ideal, dist_negative_ideal
+
+    def calculate_relative_closeness(self, distances):
+        dist_ideal, dist_negative_ideal = distances
+        relative_closeness = dist_negative_ideal / (dist_ideal + dist_negative_ideal)
+        return relative_closeness
+    
+    def determine_normalized_subcriteria_weightings(self):
+        # Step 1: Normalize the Sub-Criteria Comparison Matrix
+        normalized_matrix = self.normalize_matrix(self.matrix)
+
+        # Step 2: Calculate the Weighted Normalized Sub-Criteria Matrix
+        weighted_normalized_matrix = self.calculate_weighted_matrix(normalized_matrix)
+
+        # Step 3: Sum the Columns of the Weighted Normalized Sub-Criteria Matrix
+        self.normalized_weights = np.sum(weighted_normalized_matrix, axis=0)
+
+        
+
+    # Previous code...
+
+    def calculate_weighted_matrix(self, normalized_matrix):
+        weighted_matrix = normalized_matrix * self.weights
+        return weighted_matrix
+
+    def normalize_matrix(self, matrix):
+        norm_matrix = matrix / np.sqrt(np.sum(matrix ** 2, axis=0))
+        return norm_matrix
+
+class DatabaseManager:
+    def __init__(self, dbname, user, password = "1234", host='localhost', port='5432'):
+        self.dbname = dbname
+        self.user = user
+        self.password = password
+        self.host = host
+        self.port = port
+
+    def insert_criteria_data(self, criteria_data):
+        conn = psycopg2.connect(database=self.dbname, user=self.user, password=self.password,
+                                host=self.host, port=self.port)
+        cur = conn.cursor()
+
+        for criterion_data in criteria_data:
+            criterion_name, subcriteria_names, subcriteria_comparisons, weights, consistent, CR, rankings, normalized_subcriteria_weights = criterion_data
+
+            # Convert weights, rankings, and normalized_subcriteria_weights to lists
+            weights_list = weights.tolist()
+            rankings_list = rankings.tolist()
+            # normalized_weights_list = normalized_subcriteria_weights.tolist()
+
+            # Prepare subcriteria data
+            subcriteria_data = []
+            for name, comparison_row in zip(subcriteria_names, subcriteria_comparisons):
+                subcriteria_dict = {"name": name, "comparisons": {}}
+                for i, value in enumerate(comparison_row):
+                    subcriteria_dict["comparisons"][f"c{i+1}"] = value
+                subcriteria_data.append(subcriteria_dict)
+
+            # Execute the SQL query to insert data into the database
+            cur.execute("""
+                INSERT INTO criteria(criterion_name, subcriteria_data, weights, consistent, consistency_ratio, ranking, normalized_subcriteria_weights)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (criterion_name, json.dumps(subcriteria_data), json.dumps(weights_list),
+                bool(consistent), CR, json.dumps(rankings_list), json.dumps(normalized_subcriteria_weights))) 
+
+        # Commit the transaction and close the cursor and connection
+        conn.commit()
+        cur.close()
+        conn.close()
+
+
+
+    def insert_result(self, criteria, comparisons, weights, consistent, CR, ranking, topsis_ranking, ideal_solution, negative_ideal_solution, relative_closeness):
+        conn = psycopg2.connect(database=self.dbname, user=self.user, password=self.password,
+                                host=self.host, port=self.port)
+        cur = conn.cursor()
+        
+        weights_list = weights.tolist()
+        ranking_list = ranking.tolist()
+        comparisons_jsonb = []
+        for i, row in enumerate(comparisons):
+            comparison_dict = {}
+            for j, value in enumerate(row):
+                if i != j:
+                    comparison_dict[f"c{i+1}c{j+1}"] = value
+            comparisons_jsonb.append(comparison_dict)
+        
+        cur.execute("""
+            INSERT INTO Product(criteria, comparisons, weights, consistent, consistency_ratio, ranking, topsis_ranking, ideal_solution, negative_ideal_solution, relative_closeness)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (json.dumps(criteria), json.dumps(comparisons_jsonb), json.dumps(weights_list),
+            bool(consistent), CR, json.dumps(ranking_list), json.dumps(topsis_ranking.tolist()), json.dumps(ideal_solution.tolist()), json.dumps(negative_ideal_solution.tolist()), json.dumps(relative_closeness.tolist())))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+
+
+
+
+@app.route('/')
+def home():
+    # Check if user is loggedin
+    if 'loggedin' in session:
+    
+        # User is loggedin show them the home page
+        return render_template('home.html', username=session['username'])
+    # User is not loggedin redirect to login page
+    return redirect(url_for('login'))
+    
+
+@app.route('/index', methods=['GET', 'POST'])
+def index():
+    if request.method == 'POST':
+        num_criteria = int(request.form['num_criteria'])
+        print(num_criteria)
+        return redirect(url_for('add_criteria', num_criteria=num_criteria))
+    return render_template('index.html')
+    
+@app.route('/add_criteria/<int:num_criteria>', methods=['GET', 'POST'])
+def add_criteria(num_criteria):
+    if request.method == 'POST':
+        criteria_names = [request.form[f'c{i+1}'] for i in range(num_criteria)]
+        num_subcriteria = [int(request.form[f'num_subcriteria_{i+1}']) for i in range(num_criteria)]
+        session['criteria_names'] = criteria_names
+        session['num_subcriteria'] = num_subcriteria
+        # Redirect to compare_subcriteria route to compare sub-criteria
+        return redirect(url_for('compare_criteria'))
+    return render_template('add_criteria.html', num_criteria=num_criteria)
+
+
+
+
+@app.route('/compare_subcriteria', methods=['GET', 'POST'])
+def compare_subcriteria():
+    criteria_names = session.get('criteria_names', [])
+    num_subcriteria = session.get('num_subcriteria', [])
+    weights_list = []
+    rankings_list = []
+    CR_list = []
+    normalized_subcriteria_data = []  # List to hold normalized sub-criteria data
+
+    if request.method == 'POST':
+        form_data = dict(request.form)
+        db_manager = DatabaseManager("ahp_topsys_resultat", "postgres", "1234")
+        print("FORM dataaaaaaaaa",form_data)
+
+        # Prepare criteria_data list to pass to insert_criteria_data function
+        criteria_data = []
+        for i, criterion_name in enumerate(criteria_names):
+           
+            matrix = np.ones((num_subcriteria[i], num_subcriteria[i]))
+            subcriteria_names = form_data.get(f'subcriteria_names_{i}').split('-')  # Split the input string by '-'
+
+            print("subcriteria_names",subcriteria_names)
+            print("num_subcriteria_for_criterion",num_subcriteria[i])
+            for j in range(num_subcriteria[i]):
+                for k in range(j + 1, num_subcriteria[i]):
+                    subcriteria_comparison_key = f'c{i}s{j+1}c{i}s{k+1}'
+                    comparison_value = form_data.get(subcriteria_comparison_key)
+                    print("key",subcriteria_comparison_key)
+                    print("VALUE",comparison_value)
+                    if comparison_value is None or comparison_value == '':
+                        flash(f"Comparison value between sub-criteria {j+1} and {k+1} is missing.")
+                        return False
+                    try:
+                        comparison_value = float(comparison_value)
+                    except ValueError:
+                        flash(f"Comparison value between sub-criteria {j+1} and {k+1} is not a valid number.")
+                        return False
+                    matrix[j, k] = comparison_value
+                    matrix[k, j] = 1 / comparison_value
+
+                    
+
+            # Calculate weights, rankings, and consistency ratio
+            criteria = Criteria(criterion_name)
+            criteria.matrix = matrix  # Set the matrix attribute
+            weights = criteria.calculate_weights(matrix)
+            rankings = criteria.calculate_rankings(weights)
+            criteria.check_consistency()
+            CR = criteria.CR
+            
+            # Calculate normalized sub-criteria weights
+            normalized_subcriteria_weights = criteria.calculate_normalized_subcriteria_weights(weights)
+            print("hahaha",normalized_subcriteria_weights.tolist())
+            # Append the results to the respective lists
+            weights_list.append(weights.tolist())
+            rankings_list.append(rankings.tolist())
+            CR_list.append(CR)
+            
+            # Prepare data for insertion into database
+            criterion_data = (
+                criterion_name,  # Criterion name
+                subcriteria_names,  # Sub-criteria names
+                matrix.tolist(),  # Sub-criteria comparisons
+                weights,  # Weights
+                criteria.consistent,  # Consistency
+                CR,  # Consistency ratio
+                rankings,  # Rankings
+                normalized_subcriteria_weights.tolist()  #Normalized sub-criteria weights
+            )
+            criteria_data.append(criterion_data)
+
+        # Call the insert_criteria_data function
+        db_manager.insert_criteria_data(criteria_data)
+
+        return redirect(url_for('sub_cri_results'))
+        # Redirect to calculate_results route after processing all criteria
+        #return redirect(url_for('calculate_results'))
+
+    return render_template('compare_subcriteria.html', criteria_names=criteria_names, num_subcriteria=num_subcriteria, normalized_subcriteria_data=normalized_subcriteria_data)
+
+@app.route('/enter_comparison', methods=['GET', 'POST'])
+def enter_comparison():
+    if request.method == 'POST':
+        # Handle form submission
+        # For example, retrieve the submitted comparison values from request.form
+        # Store the comparison values in your data structure
+        
+        # Redirect to compare_subcriteria route after form submission
+        return redirect(url_for('compare_subcriteria'))
+    else:
+        # Render the template for entering comparison
+        # Make sure to pass any necessary data to the template, like criteria_names
+        criteria_names = [...]  # Populate with your criteria names
+        return render_template('enter_comparison.html', criteria_names=criteria_names)
+
+@app.route('/compare_criteria', methods=['GET','POST'])
+def compare_criteria():
+    global global_num_criteria
+    print("compare_criteria route accessed") 
+    criteria_names = session.get('criteria_names', [])
+    num_subcriteria = session.get('num_subcriteria', [])
+    
+
+    if request.method == 'POST':
+        print("I'm inside post request")
+        # Handle comparisons for both criteria and sub-criteria
+        form_data = dict(request.form)
+        product = Product()
+
+        print("Form data", form_data)
+        product.add_criteria(criteria_names)
+
+        total_weights = []
+        results = get_last_inserted_result()
+        result_criterias = get_last_inserted_result_criteria()
+
+        # Calculate total weight for each criteria
+        for criteria_tuple in result_criterias:
+            total_weight = sum(criteria_tuple[3])  # Sum of weights for the current criteria
+            total_weights.append(total_weight)
+
+        
+
+        print("Before calling compare_criteria method")
+
+        if not product.compare_criteria(form_data):
+            return redirect(url_for('compare_criteria'))
+
+        print("After calling compare_criteria method")
+        product.calculate_weights()
+        print("CRIIIIII",product.CR)
+        product.check_consistency()
+        product.calculate_rankings()
+        global_num_criteria =len(product.criteria)
+        print("number criteria",num)
+        print("product.matrix",product.matrix)
+        product.perform_topsis()  # Perform TOPSIS analysis
+        print("product.topsys",product.topsis_ranking)
+        print("product.topsys.ideal",product.ideal_solution)
+        print("product.topsys.negative",product.negative_ideal_solution)
+        print("product.topsys.relative",product.relative_closeness)
+        
+        # Insert results into the database
+        db_manager = DatabaseManager("ahp_topsys_resultat", "postgres", "1234")
+        db_manager.insert_result(criteria_names, product.matrix, product.weights,
+                                  product.consistent, product.CR, product.ranking,
+                                  product.topsis_ranking, product.ideal_solution,
+                                  product.negative_ideal_solution, product.relative_closeness)
+
+        flash("Comparison values saved successfully.")
+        if all(form_data.get(f'c{i+1}c{j+1}') for i in range(len(criteria_names)) for j in range(i+1, len(criteria_names))):
+            return redirect(url_for('cri_results'))
+            #return redirect(url_for('compare_subcriteria'))
+
+    return render_template('compare_criteria.html', criteria=criteria_names, num_criteria=len(criteria_names), num_subcriteria=num_subcriteria)
+
+@app.route('/calculate_results')
+def calculate_results():
+    total_weights = []
+    results = get_last_inserted_result()
+    result_criterias = get_last_inserted_result_criteria()
+    
+    # Calculate total weight for each criteria
+    for criteria_tuple in result_criterias:
+        total_weight = sum(criteria_tuple[3])  # Sum of weights for the current criteria
+        total_weights.append(total_weight)
+    
+    print("result_criterias", result_criterias)
+    print("Total Weights:", total_weights)
+
+    return render_template('calculate_results.html', results=results, result_criterias=result_criterias, total_weights=total_weights)   
+
+def get_last_inserted_result():
+    conn = psycopg2.connect(database="ahp_topsys_resultat", user="postgres",
+                            password="1234", host="localhost", port="5432")
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT criteria, comparisons, weights, consistent, consistency_ratio, ranking,
+               topsis_ranking, ideal_solution, negative_ideal_solution, relative_closeness
+        FROM Product ORDER BY id DESC LIMIT 1
+    """)
+    result = cur.fetchone()
+    conn.close()
+    return result
+
+
+def get_last_inserted_result_criteria():
+    global global_num_criteria
+    number_criteria = global_num_criteria
+    conn = psycopg2.connect(database="ahp_topsys_resultat", user="postgres",
+                            password="1234", host="localhost", port="5432")
+    cur = conn.cursor()
+    cur.execute("SELECT criterion_name,subcriteria_data ,subcriteria_comparisons, weights, consistent, consistency_ratio, ranking,normalized_subcriteria_weights FROM criteria ORDER BY id DESC LIMIT %s", (number_criteria,))
+    result = cur.fetchall()
+    conn.close()
+    return result
+DB_HOST = "localhost"
+DB_NAME = "ahp_topsys_resultat"
+DB_USER = "postgres"
+DB_PASS = "1234"
+ 
+conn = psycopg2.connect(dbname=DB_NAME, user=DB_USER, password=DB_PASS, host=DB_HOST)
+ 
+
+ 
+@app.route('/login/', methods=['GET', 'POST'])
+def login():
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+   
+    # Check if "username" and "password" POST requests exist (user submitted form)
+    if request.method == 'POST' and 'username' in request.form and 'password' in request.form:
+        username = request.form['username']
+        password = request.form['password']
+        print(password)
+ 
+        # Check if account exists using MySQL
+        cursor.execute('SELECT * FROM users WHERE username = %s', (username,))
+        # Fetch one record and return result
+        account = cursor.fetchone()
+ 
+        if account:
+            password_rs = account['password']
+            print(password_rs)
+            # If account exists in users table in out database
+            if check_password_hash(password_rs, password):
+                # Create session data, we can access this data in other routes
+                session['loggedin'] = True
+                session['id'] = account['id']
+                session['username'] = account['username']
+                # Redirect to home page
+                return redirect(url_for('home'))
+            else:
+                # Account doesnt exist or username/password incorrect
+                flash('Incorrect username/password')
+        else:
+            # Account doesnt exist or username/password incorrect
+            flash('Incorrect username/password')
+ 
+    return render_template('login.html')
+  
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+ 
+    # Check if "username", "password" and "email" POST requests exist (user submitted form)
+    if request.method == 'POST' and 'username' in request.form and 'password' in request.form and 'email' in request.form:
+        # Create variables for easy access
+        fullname = request.form['fullname']
+        username = request.form['username']
+        password = request.form['password']
+        email = request.form['email']
+    
+        _hashed_password = generate_password_hash(password)
+ 
+        #Check if account exists using MySQL
+        cursor.execute('SELECT * FROM users WHERE username = %s', (username,))
+        account = cursor.fetchone()
+        print(account)
+        # If account exists show error and validation checks
+        if account:
+            flash('Account already exists!')
+        elif not re.match(r'[^@]+@[^@]+\.[^@]+', email):
+            flash('Invalid email address!')
+        elif not re.match(r'[A-Za-z0-9]+', username):
+            flash('Username must contain only characters and numbers!')
+        elif not username or not password or not email:
+            flash('Please fill out the form!')
+        else:
+            # Account doesnt exists and the form data is valid, now insert new account into users table
+            cursor.execute("INSERT INTO users (fullname, username, password, email) VALUES (%s,%s,%s,%s)", (fullname, username, _hashed_password, email))
+            conn.commit()
+            flash('You have successfully registered!')
+    elif request.method == 'POST':
+        # Form is empty... (no POST data)
+        flash('Please fill out the form!')
+    # Show registration form with message (if any)
+    return render_template('register.html')
+   
+   
+@app.route('/logout')
+def logout():
+    # Remove session data, this will log the user out
+   session.pop('loggedin', None)
+   session.pop('id', None)
+   session.pop('username', None)
+   # Redirect to login page
+   return redirect(url_for('login'))
+  
+@app.route('/profile')
+def profile(): 
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+   
+    # Check if user is loggedin
+    if 'loggedin' in session:
+        cursor.execute('SELECT * FROM users WHERE id = %s', [session['id']])
+        account = cursor.fetchone()
+        # Show the profile page with account info
+        return render_template('profile.html', account=account)
+    # User is not loggedin redirect to login page
+    return redirect(url_for('login'))
+
+
+ 
+def decimal_to_fraction(value):
+    return Fraction.from_float(value).limit_denominator()  
+
+# Register the custom filter function with Jinja2 environment
+app.jinja_env.filters['fraction'] = decimal_to_fraction
+
+
+@app.route('/topsyss', methods=['GET', 'POST'])
+def show_topsis_form():
+    if request.method == 'POST':
+        # Assuming the form data containing alternatives is named 'alternatives'
+        #alternatives = request.form.getlist('alternatives')
+    # Assuming 'Criteria' and 'Product' classes are already populated with data
+        #criteria_names = [c.name for c in Criteria.query.all()]
+        #alternatives = [a.name for a in Product.query.all()]
+        #num_alternatives = request.args.get('numAlternatives', default=0, type=int)
+        #alternatives = [request.args.get(f'alternative{i}') for i in range(num_alternatives)]
+
+
+        # Fake data to simulate weights for each criterion
+        #criteria_weights = {c: np.random.rand() for c in criteria_names}
+
+        #return render_template('topsyss.html', alternatives=alternatives, num_alternatives=num_alternatives)
+        total_weights = []
+
+        results = get_last_inserted_result()
+        result_criterias = get_last_inserted_result_criteria()
+
+        # Calculate total weight for each criteria
+        for criteria_tuple in result_criterias:
+            total_weight = sum(criteria_tuple[3])  # Sum of weights for the current criteria
+            total_weights.append(total_weight)
+
+
+        num_alternatives = int(request.form.get('numAlternatives', 0))
+        alternatives = [request.form.get(f'alternative{i}') for i in range(num_alternatives)]
+
+        # Generate fake data for criteria weights as an example
+        criteria_weights = {f'Criterion {i + 1}': round(np.random.rand(), 2) for i in
+                            range(3)}  # Example for 3 criteria
+
+        return render_template('topsyss.html', alternatives=alternatives, criteria_weights=criteria_weights,
+                               results=results, result_criterias=result_criterias, total_weights=total_weights
+        )
+
+        # If GET request or no data, redirect back to form or show an empty form
+    return render_template('topsyss.html', alternatives=[], criteria_weights={})
+alternative_noms = {}
+@app.route('/process_topsis', methods=['POST'])
+def process_topsis():
+    global weight_dic 
+    global alternative_noms
+    form_data = dict(request.form)
+    print("FROM", form_data)
+    num_alternatives = int(request.form.get('numAlternatives', 0))
+    alternatives = [request.form.get(f'alternative{i}') for i in range(num_alternatives)]
+    # Initialize dictionaries to store criteria weights and alternative values
+    criteria_weights = {}
+    alternative_values = {}
+    
+    # Extract sub-criteria weights and alternative values from form data
+    for key, value in form_data.items():
+        # Check if the key contains subcriterion weight data
+        if key.startswith('subcriterion_weight_'):
+            subcriterion_name = key.split('_')[-1]
+            weight = float(value)
+            criteria_weights[subcriterion_name] = weight
+        # Check if the key contains alternative values
+        elif key.startswith('alternative_values_'):
+            parts = key.split('_')
+            subcriterion_name = '_'.join(parts[2:-1])  # Extract subcriterion name
+            alternative_name = parts[-1]  # Extract alternative name
+            value = float(value)
+            if subcriterion_name not in alternative_values:
+                alternative_values[subcriterion_name] = {}
+            alternative_values[subcriterion_name][alternative_name] = value
+    
+    print("criteria_weights",criteria_weights)
+    print("alternative_values",alternative_values)
+    alternative_values_array = np.array([[alternative_values[criterion][alternative] for alternative in alternative_values[criterion]] for criterion in criteria_weights])
+
+    alternative_values_array = np.array([[alternative_values[criterion][alternative] for alternative in alternative_values[criterion]] for criterion in criteria_weights])
+
+    # Normalize the alternative values for each criterion
+    normalized_alternatives = alternative_values_array / np.sqrt((alternative_values_array ** 2).sum(axis=1))[:, np.newaxis]
+
+    # Convert criteria weights to a numpy array
+    criteria_weights_array = np.array(list(criteria_weights.values()))
+
+    # Multiply each normalized value by its respective criterion weight using broadcasting
+    weighted_normalized_decision_matrix = normalized_alternatives * criteria_weights_array[:, np.newaxis]
+    
+    result_criterias = get_last_inserted_result_criteria()
+    print("Weighted Normalized Decision Matrix:")
+    print(weighted_normalized_decision_matrix)
+    subcriteria_list = list(alternative_values.keys())
+    weighted_normalized_decision_matrix_dict = OrderedDict()
+    for i, subcriterion in enumerate(subcriteria_list):
+        weighted_normalized_decision_matrix_dict[subcriterion] = weighted_normalized_decision_matrix[i]
+
+    alternative_names = {}
+    for subcriterion_name, values in alternative_values.items():
+        for alternative_name in values:
+            if alternative_name not in alternative_names:
+                alternative_names[alternative_name] = []
+            alternative_names[alternative_name].append(subcriterion_name)
+
+
+    print("Weighted Normalized Decision Matrix diccccc:",weighted_normalized_decision_matrix_dict)
+    print("alternative_names",alternative_names)
+    weight_dic = weighted_normalized_decision_matrix_dict 
+    alternative_noms = alternative_names
+    return render_template('results.html', criteria_weights=criteria_weights, 
+                           weighted_normalized_decision_matrix=weighted_normalized_decision_matrix_dict, 
+                           alternative_names=alternative_names)
+
+# @app.route('/negative_postive_alter', methods=['POST'])
+# def negative_postive_alter():
+#     # Get the form data
+#     criteria_weights = {}
+#     weighted_normalized_decision_matrix = {}
+#     maximize_minimize = {}
+
+#     # Extract weights for each sub-criterion
+#     for key, value in request.form.items():
+#         if key.endswith('_weight'):
+#             subcriterion = key[:-7]  # Remove '_weight' from the key to get sub-criterion name
+#             criteria_weights[subcriterion] = value
+    
+#     # Extract values for each sub-criterion
+#     for key, value in request.form.items():
+#         if key.endswith('_value[]'):
+#             subcriterion = key[:-7]  # Remove '_value[]' from the key to get sub-criterion name
+#             if subcriterion not in weighted_normalized_decision_matrix:
+#                 weighted_normalized_decision_matrix[subcriterion] = []
+#             weighted_normalized_decision_matrix[subcriterion].append(value)
+
+#     # Extract whether to maximize or minimize for each sub-criterion
+#     for key, value in request.form.items():
+#         if value == 'maximize' or value == 'minimize':
+#             subcriterion = key.split('_')[1]  # Extract sub-criterion name
+#             operation = value
+#             maximize_minimize[subcriterion] = operation
+
+#     print("Form Data:", request.form)
+#     print("criteria_weights:", criteria_weights)
+#     print("weighted_normalized_decision_matrix:", weighted_normalized_decision_matrix)
+#     print("maximize_minimize:", maximize_minimize)
+
+#     return render_template('topsis_results.html', criteria_weights=criteria_weights, weighted_normalized_decision_matrix=weighted_normalized_decision_matrix)
+
+
+import math
+
+@app.route('/negative_postive_alter', methods=['POST'])
+def negative_postive_alter():
+    # Get the form data
+    global alternative_noms
+    global weight_dic
+    criteria_weights = {}
+    weighted_normalized_decision_matrix = defaultdict(list)
+    maximize_minimize2 = {}
+    alternative_values = defaultdict(dict)
+
+    for key, value in request.form.items():
+        if key.endswith('_weight'):
+            # Extract sub-criterion name
+            subcriterion = key.split('_')[0]
+            criteria_weights[subcriterion] = float(value)
+        elif key.endswith('_value'):
+            # Extract sub-criterion and alternative names
+            parts = key.split('_')
+            subcriterion = parts[0]
+            alternative_name = parts[1]
+            # Add value to alternative_values dictionary
+            alternative_values[alternative_name][subcriterion] = float(value)
+            weighted_normalized_decision_matrix[subcriterion].append(float(value))
+        elif key.startswith('maximize_') or key.startswith('minimize_'):
+            # Extract sub-criterion name
+            subcriterion = key.split('_')[1]
+            maximize_minimize2[subcriterion] = value
+    
+    # Initialize A* and A- dictionaries
+    A_star = {}
+    A_minus = {}
+
+    # Calculate A* and A- for each sub-criterion
+    for subcriterion, values in weighted_normalized_decision_matrix.items():
+        # Check if values are empty
+        if len(values) == 0:
+            print("Values list is empty for sub-criterion:", subcriterion)
+            continue
+
+        # Calculate A* and A- for the current sub-criterion
+        if maximize_minimize2[subcriterion] == 'maximize':
+            A_star[subcriterion] = max(values)
+            A_minus[subcriterion] = min(values)
+            if A_minus[subcriterion] > A_star[subcriterion]:
+                A_star[subcriterion], A_minus[subcriterion] = A_minus[subcriterion], A_star[subcriterion]
+        else:
+            A_star[subcriterion] = min(values)
+            A_minus[subcriterion] = max(values)
+
+    # Calculate Euclidean distances for each alternative from the positive and negative ideal solutions
+    positive_distances = {}
+    negative_distances = {}
+
+    for alternative, values in alternative_values.items():
+        # Calculate distance from the positive ideal solution
+        positive_distance = math.sqrt(sum((values[criterion] - A_star[criterion])**2 for criterion in values))
+        positive_distances[alternative] = positive_distance
+
+        # Calculate distance from the negative ideal solution
+        negative_distance = math.sqrt(sum((values[criterion] - A_minus[criterion])**2 for criterion in values))
+        negative_distances[alternative] = negative_distance
+
+    # Print the extracted data and distances (for debugging)
+    print("Form Data:", request.form)
+    print("criteria_weights:", criteria_weights)
+    print("weighted_normalized_decision_matrix:", weighted_normalized_decision_matrix)
+    print("maximize_minimize2:", maximize_minimize2)
+    print("Alternative Values:", alternative_values)
+    print("A_star:", A_star)
+    print("A_minus", A_minus)
+    print("Positive Distances:", positive_distances)
+    print("Negative Distances:", negative_distances)
+    print("alternative_noms:", alternative_noms)
+
+    results = get_last_inserted_result()
+    result_criterias = get_last_inserted_result_criteria()
+    relative_closeness_coefficients = {}
+
+    for alternative in positive_distances:
+        positive_distance = positive_distances[alternative]
+        negative_distance = negative_distances[alternative]
+
+        # Calculate relative closeness coefficient
+        relative_closeness_coefficient = negative_distance / (positive_distance + negative_distance)
+        
+        # Store the relative closeness coefficient for the alternative
+        relative_closeness_coefficients[alternative] = relative_closeness_coefficient
+
+    # Print or use the relative closeness coefficients as needed
+    print("Relative Closeness Coefficients:", relative_closeness_coefficients)
+    ranked_alternatives = sorted(relative_closeness_coefficients.items(), key=lambda x: x[1], reverse=True)
+    print("Ranked Alternatives ",ranked_alternatives)
+    # Get the optimal alternative (the one with the highest relative closeness coefficient)
+    optimal_alternative, optimal_closeness_coefficient = ranked_alternatives[0]
+    alternative_ranks = {}
+
+    print("Ranked Alternatives (Descending Order):")
+    for rank, (alternative, closeness_coefficient) in enumerate(ranked_alternatives, start=1):
+        print("Rank", rank, "-", alternative, ": Closeness Coefficient =", closeness_coefficient)
+        alternative_ranks[alternative] = rank
+
+    # Get the optimal alternative (the one with the highest relative closeness coefficient)
+    optimal_alternative, optimal_closeness_coefficient = ranked_alternatives[0]
+    print("\nOptimal Alternative:", optimal_alternative)
+    print("Alternative Ranks:", alternative_ranks)
+    return render_template('topsis_results.html', 
+                           criteria_weights=criteria_weights, 
+                           weighted_normalized_decision_matrix=weighted_normalized_decision_matrix,
+                           results=results, result_criterias=result_criterias, maximize_minimize2=maximize_minimize2,
+                           A_star=A_star, A_minus=A_minus,
+                           alternative_values=alternative_values,
+                           positive_distances=positive_distances,
+                           negative_distances=negative_distances,
+                           alternative_noms= alternative_noms,
+                           weight_dic=weight_dic,
+                           positive_distance=positive_distances,
+                           negative_distance=negative_distances,
+                           relative_closeness_coefficient=relative_closeness_coefficients,
+                           alternative_ranks=alternative_ranks)
+
+def euclidean_distance_to_A_star(alternative_values, A_star_values):
+    """
+    Calculate the Euclidean distance of each alternative from the positive ideal solution (A*).
+    
+    Args:
+    - alternative_values (dict): Dictionary containing the values of each alternative for each sub-criterion.
+    - A_star_values (dict): Dictionary containing the values of A* for each sub-criterion.
+    
+    Returns:
+    - distances (dict): Dictionary containing the Euclidean distance of each alternative from A*.
+    """
+    distances = {}
+    for alternative, values in alternative_values.items():
+        distance = 0
+        for subcriterion, value in values.items():
+            distance += (value - A_star_values[subcriterion]) ** 2
+        distances[alternative] = math.sqrt(distance)
+    return distances
+
+def euclidean_distance_to_A_minus(alternative_values, A_minus_values):
+    """
+    Calculate the Euclidean distance of each alternative from the negative ideal solution (A-).
+    
+    Args:
+    - alternative_values (dict): Dictionary containing the values of each alternative for each sub-criterion.
+    - A_minus_values (dict): Dictionary containing the values of A- for each sub-criterion.
+    
+    Returns:
+    - distances (dict): Dictionary containing the Euclidean distance of each alternative from A-.
+    """
+    distances = {}
+    for alternative, values in alternative_values.items():
+        distance = 0
+        for subcriterion, value in values.items():
+            distance += (value - A_minus_values[subcriterion]) ** 2
+        distances[alternative] = math.sqrt(distance)
+    return distances
+
+@app.route('/get_subcriteria_names')
+def get_subcriteria_names():
+    # Assuming you have a function to retrieve subcriteria names
+    subcriteria_names = get_subcriteria_names_from_database()  # Replace this with your own function
+
+    # Returning the subcriteria names as JSON
+    return jsonify({'subcriteria_names': subcriteria_names})
+if __name__ == '__main__':
+    app.run(debug=True)

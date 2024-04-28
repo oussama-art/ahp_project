@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOPSIS Results</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-4">TOPSIS Results</h1>
+        
+        <div class="row mt-4">
+            <div class="col">
+                <h2>TOPSIS Analysis Results</h2>
+                <form id="topsisForm" action="/negative_postive_alter" method="post">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Sub-Criteria</th>
+                                <th>Weight</th>
+                                {% for alternative_name in alternative_names %}
+                                    <th>{{ alternative_name }}</th>
+                                {% endfor %}
+                                <th>Maximize/Minimize</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for subcriterion, weight in criteria_weights.items() %}
+                                <tr>
+                                    <td>{{ subcriterion }}</td>
+                                    <td><input type="text" name="{{ subcriterion }}_weight" value="{{ weight }}"></td> <!-- Weight input -->
+                                    
+                                        {% for value,alternative_name in zip(weighted_normalized_decision_matrix[subcriterion],alternative_names) %}
+                                            <td><input type="text" name="{{ subcriterion }}_{{ alternative_name }}_value" value="{{ '%.4f'|format(value) }}"></td> <!-- Value input -->
+                                        {% endfor %}
+                                    
+                                    <!-- Checkboxes for maximizing and minimizing -->
+                                    <td>
+                                        <input type="checkbox" name="maximize_{{ subcriterion }}" value="maximize" onchange="toggleCheckboxes(this)"> Maximize
+                                        <input type="checkbox" name="minimize_{{ subcriterion }}" value="minimize" onchange="toggleCheckboxes(this)"> Minimize
+                                    </td>
+                                </tr>
+                            {% endfor %}
+
+                        </tbody>
+                        
+                    </table>
+                    <button type="submit">Submit</button>
+                </form>
+            </div>
+        </div>    
+        
+    </div>
+
+    <script>
+        function toggleCheckboxes(checkbox) {
+            // Find the other checkbox in the same row
+            var otherCheckbox = checkbox.parentNode.querySelector('input[type="checkbox"]:not([name="' + checkbox.name + '"])');
+            // If the current checkbox is checked, uncheck the other checkbox
+            if (checkbox.checked) {
+                otherCheckbox.checked = false;
+            }
+        }
+        
+        document.getElementById('topsisForm').addEventListener('submit', function(event) {
+            // Loop through all checkboxes
+            var checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            for (var i = 0; i < checkboxes.length; i++) {
+                // If both "Maximize" and "Minimize" are checked, prevent form submission
+                if (checkboxes[i].checked && checkboxes[i].name.startsWith('maximize_')) {
+                    var correspondingMinimizeCheckbox = document.querySelector('input[name="minimize_' + checkboxes[i].name.substring(9) + '"]');
+                    if (correspondingMinimizeCheckbox.checked) {
+                        alert('Please select either Maximize or Minimize for each criterion.');
+                        event.preventDefault();
+                        return;
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+{% extends 'layout.html' %}
+  
+{% block title %}Home{% endblock %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criteria Selection</title>
+    
+   
+</head>
+<body>
+    <h1>Enter the number of criteria:</h1>
+    <form name="criteriaForm" method="POST" action="/index" >
+        <input type="number" name="num_criteria" >
+        <button type="submit">Next</button>
+        <div id="error" class="error-message"></div>
+    </form>
+</body>
+</html>
+{% endblock %}

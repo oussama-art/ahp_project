@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TOPSIS Results</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-4">
+        <h2>TOPSIS Analysis Results</h2>
+
+        <!-- Table for displaying TOPSIS analysis results -->
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Sub-Criteria</th>
+                    <th>Weight</th>
+                    {% for alternative_name in alternative_noms %}
+                        <th>{{ alternative_name }}</th>
+                    {% endfor %}
+                    <th>Maximize/Minimize</th>
+                    <th>A*</th>
+                    <th>A-</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for subcriterion, weight in criteria_weights.items() %}
+                    <tr>
+                        <td>{{ subcriterion }}</td>
+                        <td>{{ weight }}</td>
+                        {% for value in weighted_normalized_decision_matrix[subcriterion] %}
+                            <td>{{ "{:.4f}".format(value) }}</td> <!-- Value input -->
+                        {% endfor %}
+                        <td>{{ maximize_minimize2[subcriterion] }}</td>
+                        <td>{{ "{:.4f}".format(A_star[subcriterion]) }}</td>
+                        <td>{{ "{:.4f}".format(A_minus[subcriterion]) }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <button id="toggleTableBtn" class="btn btn-primary">Show/Hide Positive/Negative Distances</button>
+
+        <table id="distanceTable" class="table mt-4" style="display: none;">
+            <thead>
+                <tr>
+                    <th>Alternative</th>
+                    <th>Positive Distance(D-)</th>
+                    <th>Negative Distance(D-)</th>
+                    <th>relative closeness(Ci)</th>
+                    <th>Rank</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for alternative_name in alternative_noms %}
+                    <tr>
+                        <td>{{ alternative_name }}</td>
+                        <td>{{ "{:.4f}".format(positive_distance[alternative_name]) }}</td>
+                        <td>{{ "{:.4f}".format(negative_distance[alternative_name]) }}</td>
+                        <td>{{  "{:.4f}".format(relative_closeness_coefficient[alternative_name])}}</td>
+                        <td>{{  alternative_ranks[alternative_name]}}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- jQuery script for toggling visibility of the additional table -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#toggleTableBtn').click(function() {
+                $('#distanceTable').toggle();
+            });
+        });
+    </script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+</html>

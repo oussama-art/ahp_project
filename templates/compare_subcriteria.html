@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compare Sub-Criteria</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+        
+    <style>
+        .matrix {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="cost container col-md-6">
+        <h1 class="text-center mb-4 fs-4 font-monospace">Compare Sub-Criteria</h1>
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="alert alert-info">
+            <ul class="flashes">
+                {% for message in messages %}
+                <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        {% endwith %}
+        <nav>
+            <div class="nav nav-tabs  d-flex flex-nowrap" id="nav-tab" role="tablist">
+                {% for i, criterion_name in enumerate(criteria_names) %}
+                <button class="nav-link rounded-0 disabled  process-sub " id="nav-{{ criterion_name }}-tab"
+                    data-bs-toggle="tab" data-bs-target="#nav-{{ criterion_name }}" type="button" role="tab"
+                    aria-controls="nav-{{ criterion_name }}"
+                    aria-selected="{% if i == 0 %}true{% else %}false{%endif%}">
+
+                </button>
+                {% endfor %}
+            </div>
+        </nav>
+        <form class="was-validated" action="{{ url_for('compare_subcriteria') }}" method="POST">
+            <div class="tab-content" id="nav-tabContent">
+                {% set num_criteria = criteria_names | length %}
+                {% for i, criterion_name in enumerate(criteria_names) %}
+                <div class="tab-pane fade {% if i == 0 %}show active{% endif %}" id="nav-{{ criterion_name }}"
+                    role="tabpanel" aria-labelledby="nav-{{ criterion_name }}-tab">
+                    <h3 class="mb-3">Sub-Criteria for {{ criterion_name }}</h3>
+                    <label for="subcriteria_names_{{ i }}" class="form-label">Enter names of sub-criteria
+                        (hyphen-separated):</label>
+                    <input type="text" class="form-control mb-3" id="subcriteria_names_{{ i }}"
+                        name="subcriteria_names_{{ i }}" required oninput="updateComparisonLabels('{{ i }}')"><br>
+                    <button type="button" class="btn btn-primary mb-3" onclick="displayMatrix('{{ i }}')">Display Matrix</button>
+                    <div id="matrix_{{ i }}" class="matrix">
+                        <h3>Comparison Matrix</h3>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th scope="col"></th>
+                                    <!-- Iterate over subcriteria_names for this criteria -->
+                                    {% if subcriteria_names %}
+                                    {% for subcriterion in subcriteria_names[i] %}
+                                    <th scope="col">{{ subcriterion }}</th>
+                                    {% endfor %}
+                                    {% endif %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Iterate over subcriteria_names for this criteria -->
+                                {% if subcriteria_names %}
+                                {% for j in range(num_subcriteria[i]) %}
+                                    {% for k in range(j + 1, num_subcriteria[i]) %}
+                                    <tr>
+                                        <th scope="row">Comparison between {{ subcriteria_names[i][j] }} and {{ subcriteria_names[i][k] }}:</th>
+                                        <td>
+                                            <label for="c{{ i+1 }}s{{ j+1 }}c{{ i+1 }}s{{ k+1 }}"></label>
+                                            <input type="number" class="form-control" name="c{{ i+1 }}s{{ j+1 }}c{{ i+1 }}s{{ k+1 }}" required>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% endfor %}
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Boutons "Précédent" et "Suivant" -->
+                    <div class="d-grid gap-2 mt-2 d-md-flex justify-content-md-between">
+                        {% if i != 0 %}
+                        <button type="button" class="btn btn-secondary" onclick="prevTab('{{i}}')">Previous</button>
+                        {% endif %}
+                        {% if i != num_criteria - 1 %}
+                        <button type="button" class="btn btn-primary" onclick="nextTab('{{i}}')">Next</button>
+                        {% else %}
+                        <button type="submit" class="btn btn-primary text-white btn-block">Finish</button>
+                        {% endif %}
+                    </div>
+                    <!-- Fin des boutons -->
+                </div>
+                {% endfor %}
+            </div>
+        </form>
+
+        <script>
+            function prevTab(i) {
+                var index = parseInt(i);
+                $('#nav-tabContent').children().eq(index).removeClass('show active');
+                var prevIndex = index - 1;
+                $('#nav-tabContent').children().eq(prevIndex).addClass('show active');
+            }
+
+            function nextTab(i) {
+                console.log("Next tab clicked");
+                var index = parseInt(i);
+                console.log("Current index:", index);
+                $('#nav-tabContent').children().eq(index).removeClass('show active'); // Remove active from current tab
+                var nextIndex = index + 1;
+                console.log("Next index:", nextIndex);
+                $('#nav-tabContent').children().eq(nextIndex).addClass('show active'); // Add active to next tab
+            }
+
+        
+            function displayMatrix(index) {
+                var subcriteriaInputId = 'subcriteria_names_' + index;
+                var subcriteriaInput = document.getElementById(subcriteriaInputId);
+                var subcriteriaNames = subcriteriaInput.value.split('-');
+                var matrixId = 'matrix_' + index;
+                var matrix = document.getElementById(matrixId);
+                matrix.innerHTML = '';
+                var tableHtml = '<h3>Comparison Matrix</h3><table class="table">';
+                tableHtml += '<thead><tr><th scope="col"></th>';
+                subcriteriaNames.forEach(function(subcriterion) {
+                    tableHtml += '<th scope="col">' + subcriterion + '</th>';
+                });
+                tableHtml += '</tr></thead><tbody>';
+                subcriteriaNames.forEach(function(subcriterion1, j) {
+                    var row = j + 1; // Adjusting the row index to start from 1
+                    tableHtml += '<tr><th scope="row">' + subcriterion1 + '</th>';
+                    subcriteriaNames.forEach(function(subcriterion2, k) {
+                        var col = k + 1; // Adjusting the column index to start from 1
+                        tableHtml += '<td>';
+                        if (row === col) {
+                            tableHtml += '<input type="number" class="form-control" value="1" disabled>';
+                        } else if (row < col) {
+                            tableHtml += '<input type="number" class="form-control" name="c' + index + 's' + row + 'c' + index + 's' + col + '" required>';
+                        } else {
+                            tableHtml += '<input type="number" class="form-control" name="c' + index + 's' + row + 'c' + index + 's' + col + '" disabled>';
+                        }
+                        tableHtml += '</td>';
+                    });
+                    tableHtml += '</tr>';
+                });
+                tableHtml += '</tbody></table>';
+                matrix.innerHTML = tableHtml;
+                matrix.style.display = 'block';
+            }
+
+
+        
+            function updateComparisonLabels(index) {
+                var subcriteriaInputId = 'subcriteria_names_' + index;
+                var subcriteriaInput = document.getElementById(subcriteriaInputId);
+                var subcriteriaNames = subcriteriaInput.value.split('-');
+        
+                // Now you have the subcriteria names, you can use them to update your comparison labels
+                for (var j = 0; j < subcriteriaNames.length; j++) {
+                    for (var k = j + 1; k < subcriteriaNames.length; k++) {
+                        var comparisonLabelId = 'comparison_label_' + index + '_' + (j * subcriteriaNames.length + k + 1);
+                        var comparisonLabel = document.getElementById(comparisonLabelId);
+                        comparisonLabel.innerText = "Comparison between " + subcriteriaNames[j] + " and " + subcriteriaNames[k] + ":";
+                    }
+                }
+            }
+        </script>
+        
+        
+    </div>
+
+    <!-- Bootstrap JS (optional) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.min.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <!-- Bootstrap CSS CDN -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .table {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-3">
+        <h2 class="mb-3">Comparison Matrix</h2>
+        <table class="table table-bordered">
+            {% set criteria = results[0] %}
+            {% set comparisons = results[1] %}
+            <thead class="thead-dark">
+                <tr>
+                    <th>Criteria</th>
+                    {% for criterion in criteria %}
+                        <th>{{ criterion }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for i, criterion in enumerate(criteria) %}
+                <tr>
+                    <td>{{ criterion }}</td>
+                    {% for j, other_criterion in enumerate(criteria) %}
+                        {% if i == j %}
+                            <td>1</td>
+                        {% else %}
+                            {% set comparison_key = 'c' + (i+1)|string + 'c' + (j+1)|string %}
+                            {% set comparison_value = comparisons[i][comparison_key] if comparison_key in comparisons[i] else 1 %}
+                            <td>{{ comparison_value | fraction }}</td>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h2 class="mt-4">Criteria Weights and Rankings</h2>
+        <table class="table table-striped table-hover">
+            <thead class="thead-light">
+                <tr>
+                    <th>Criteria</th>
+                    <th>Weight (%)</th>
+                    <th>Ranking</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in range(results[0]|length) %}
+                <tr>
+                    <td>{{ results[0][i] }}</td>
+                    <td>{{ "{:.2f}".format(results[2][i] * 100) }}%</td>
+                    <td>{{ results[5][i] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    <a href="{{ url_for('compare_subcriteria') }}" class="btn btn-primary">Next</a>
+
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

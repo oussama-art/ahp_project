@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AHP Results</title>
+</head>
+<body>
+    
+    <h1>Results</h1>
+    
+  
+    <h2>Comparison Matrix</h2>
+    <table border="1">
+        {% set criteria = results[0] %}
+        {% set comparisons = results[1] %}
+        <tr>
+            <th>Criteria</th>
+            {% for criterion in criteria %}
+                <th>{{ criterion }}</th>
+            {% endfor %}
+        </tr>
+        {% for i, criterion in enumerate(criteria) %}
+        <tr>
+            <td>{{ criterion }}</td>
+            {% for j, other_criterion in enumerate(criteria) %}
+                {% if i == j %}
+                    <td>1</td>
+                {% else %}
+                    {% set comparison_key = 'c' + (i+1)|string + 'c' + (j+1)|string %}
+                    {% set comparison_value = comparisons[i][comparison_key] if comparison_key in comparisons[i] else 1 %}
+                    <td>{{ comparison_value | fraction }}</td>
+                {% endif %}
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Sub Comparison Matrix</h2>
+    {% for criteria_tuple in result_criterias %}
+        {% set criteria_name, subcriteria_list, weights, _, _, ranking, _ ,_= criteria_tuple %}
+        <h3>{{ criteria_name }}</h3>
+         <table border="1">
+            <tr>
+                <th>Sub-criterion</th>
+                {% for subcriterion in subcriteria_list %}
+                    <th>{{ subcriterion.name }}</th>
+                {% endfor %}
+            </tr>
+            {% for subcriterion in subcriteria_list %}
+                <tr>
+                    <td>{{ subcriterion.name }}</td>
+                    {% for comparison in subcriterion.comparisons.values() %}
+                        <td>{{ "{:.2f}".format(comparison) }}</td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </table>     
+    {% endfor %}
+
+    <h2>Sub Criteria Weights and Rankings</h2>
+    {% for criteria_tuple in result_criterias %}
+        {% set criteria_name, subcriteria_list, _, _, _, CR, _,_ = criteria_tuple %}
+        <h3>{{ criteria_name }}</h3>
+        <table border="1">
+            <tr>
+                <th>Sub-criterion</th>
+                <th>Weight (%)</th>
+                <th>Ranking</th>
+                <th>normalize</th>
+            </tr>
+            {% for subcriteria in subcriteria_list %}
+                <tr>
+                    <td>{{ subcriteria.name }}</td>
+                    <td>{{ "{:.2f}".format(criteria_tuple[3][loop.index0]) }}%</td>  {# Assuming weights are at index 3 in criteria_tuple #}
+                    <td>{{ criteria_tuple[6][loop.index0] }}</td>  {# Assuming rankings are at index 6 in criteria_tuple #}
+                    <td>{{ criteria_tuple[7][loop.index0] }}</td>  {# Assuming rankings are at index 6 in criteria_tuple #}
+                </tr>
+            {% endfor %}
+            <tr>
+                <td colspan="3">CR = {{ CR }}</td>
+            </tr>
+        </table>
+    {% endfor %}
+    
+    
+
+
+
+    
+
+
+    
+
+ 
+
+
+    <h2>Criteria Weights and Rankings</h2>
+    <table border="1">
+        <tr>
+            <th>Criteria</th>
+            <th>Weight (%)</th>
+            <th>Ranking</th>
+        </tr>
+        {% for i in range(results[0]|length) %}
+        <tr>
+            <td>{{ results[0][i] }}</td>
+            <td>{{ "{:.2f}".format(results[2][i] * 100) }}%</td>
+            <td>{{ results[5][i] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Criteria Topsys </h2>
+    <table border="1">
+        <tr>
+            <th>Criteria</th>
+            <th>ideal (%)</th>
+            <th>negative</th>
+            <th>rank</th>
+            <th>closeness to ideal</th>
+        </tr>
+        {% for i in range(results[0]|length) %}
+        <tr>
+            <td>{{ results[0][i] }}</td>
+            <td>{{ "{:.2f}".format(results[7][i] * 100) }}%</td>
+            <td>{{ "{:.2f}".format(results[8][i] * 100) }}%</td>
+            <td>{{ results[6][i]  }}</td>
+            <td>{{ "{:.2f}".format(results[9][i] * 100) }}%</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    
+        
+
+    
+
+
+    
+
+
+    
+
+    
+
+    <h2>Decision Matrix</h2>
+    <table border="1">
+        {% set criteria = results[0] %}
+        {% set comparisons = results[1] %}
+        <tr>
+            <th>Criteria</th>
+            {% for criterion in criteria %}
+                <th>{{ criterion }}</th>
+            {% endfor %}
+        </tr>
+        {% for i, criterion in enumerate(criteria) %}
+        <tr>
+            <td>{{ criterion }}</td>
+            {% for j, other_criterion in enumerate(criteria) %}
+                {% if i == j %}
+                    <td>1</td>
+                {% else %}
+                    {% set comparison_key = 'c' + (i+1)|string + 'c' + (j+1)|string %}
+                    {% set comparison_value = comparisons[i][comparison_key] if comparison_key in comparisons[i] else 1 %}
+                    <td>{{ "{:.2f}".format(comparison_value) }}</td>
+                {% endif %}
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+
+
+<a href="{{ url_for('topsys') }}" class="btn btn-primary">Next</a>
+</body>
+</html>
