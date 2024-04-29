@@ -1,127 +1,216 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Sub Criteria Comparison</title>
     <!-- Bootstrap CSS CDN -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .mt-3 {
-            margin-top: 1rem;
-        }
-        .mb-3 {
-            margin-bottom: 1rem;
-        }
-        .table {
-            margin-top: 20px;
-            width: auto;
-        }
-        .table th, .table td {
-            vertical-align: middle;
-        }
-    </style>
 </head>
+
 <body>
-<div class="container mt-3">
-    <h2>Sub Comparison Matrix</h2>
-    {% for criteria_tuple in result_criterias %}
-        {% set criteria_name, subcriteria_list, weights, _, _, ranking, _, _ = criteria_tuple %}
-        <h3>{{ criteria_name }}</h3>
-        <div class="table-responsive">
-            <table class="table table-bordered">
-                <thead class="thead-dark">
-                    <tr>
-                        <th>Sub-criterion</th>
-                        {% for subcriterion in subcriteria_list %}
-                            <th>{{ subcriterion.name }}</th>
-                        {% endfor %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for subcriterion in subcriteria_list %}
-                        <tr>
-                            <td>{{ subcriterion.name }}</td>
-                            {% for comparison in subcriterion.comparisons.values() %}
+    {% include 'top-menu.html' %}
+
+    <div class="container mt-3">
+        <!-- Nav tabs -->
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item ">
+                <a class="nav-link active " id="tree-tab" data-toggle="tab" href="#tree" role="tab" aria-controls="tree"
+                    aria-selected="false">Tree</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link " id="comparison-matrix-tab" data-toggle="tab" href="#comparison-matrix"
+                    role="tab" aria-controls="comparison-matrix" aria-selected="true">Comparison Matrix</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="criteria-weights-rankings-tab" data-toggle="tab"
+                    href="#criteria-weights-rankings" role="tab" aria-controls="criteria-weights-rankings"
+                    aria-selected="false">Criteria Weights and Rankings</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="criteria-subcriteria-weights-tab" data-toggle="tab"
+                    href="#criteria-subcriteria-weights" role="tab" aria-controls="criteria-subcriteria-weights"
+                    aria-selected="false">Criteria and Subcriteria Weights</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="sub-comparison-matrix-tab" data-toggle="tab"
+                    href="#sub-comparison-matrix" role="tab" aria-controls="sub-comparison-matrix"
+                    aria-selected="false">Sub Comparison Matrix</a>
+            </li>
+        </ul>
+        <!-- Tab panes -->
+        <div class="tab-content">
+            <!-- Comparison Matrix Tab -->
+            <div class="tab-pane fade " id="comparison-matrix" role="tabpanel"
+                aria-labelledby="comparison-matrix-tab">
+                <h2 class="mt-3">Comparison Matrix</h2>
+                {% for criteria_tuple in result_criterias %}
+                {% set criteria_name, subcriteria_list, weights, _, _, ranking, _, _ = criteria_tuple %}
+                <h3>{{ criteria_name }}</h3>
+                <div class="table-responsive">
+                    <table class="table table-light table-bordered">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Sub-criterion</th>
+                                {% for subcriterion in subcriteria_list %}
+                                <th>{{ subcriterion.name }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for subcriterion in subcriteria_list %}
+                            <tr>
+                                <td>{{ subcriterion.name }}</td>
+                                {% for comparison in subcriterion.comparisons.values() %}
                                 <td>{{ "{:.2f}".format(comparison) }}</td>
+                                {% endfor %}
+                            </tr>
                             {% endfor %}
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    {% endfor %}
-
-    <h2 class="mt-4">Sub Criteria Weights and Rankings</h2>
-    {% for criteria_tuple in result_criterias %}
-        {% set criteria_name, subcriteria_list, _, _, _, CR, _, _ = criteria_tuple %}
-        <h3>{{ criteria_name }}</h3>
-        <div class="table-responsive">
-            <table class="table table-striped">
-                <thead class="thead-light">
-                    <tr>
-                        <th>Sub-criterion</th>
-                        <th>Weight (%)</th>
-                        <th>Ranking</th>
-                        <th>Normalize</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for subcriteria in subcriteria_list %}
-                        <tr>
-                            <td>{{ subcriteria.name }}</td>
-                            <td>{{ "{:.2f}".format(criteria_tuple[3][loop.index0]) }}%</td>
-                            <td>{{ criteria_tuple[6][loop.index0] }}</td>
-                            <td>{{ criteria_tuple[7][loop.index0] }}</td>
-                        </tr>
-                    {% endfor %}
-                    <tr>
-                        <td colspan="3"><strong>CR Value:</strong></td>
-                        <td><strong>{{ CR }}</strong></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    {% endfor %}
-
-
-    <h2 class="mt-4">Criteria and Subcriteria Weights</h2>
-    <div class="table-responsive">
-        <table class="table table-striped">
-            <thead class="thead-light">
-                <tr>
-                    <th>Parent Criteria</th>
-                    <th>Weight (%)</th>
-                    <th>Subcriteria</th>
-                    <th>Subcriteria Weight (%)</th>
-                </tr>
-            </thead>
-            <tbody>
-                
-                {% for criteria_tuple,i in zip(result_criterias,range(results[0]|length)[::-1]) %}
-                    {% set criteria_name, subcriteria_list, weights, _, _, ranking, _, _ = criteria_tuple %}
-                    <tr>
-                        <td rowspan="{{ subcriteria_list|length }}">{{ criteria_name }}</td>
-                        <td rowspan="{{ subcriteria_list|length }}">{{ "{:.4f}".format(results[2][i]) }}</td>
-                        {% for subcriteria in subcriteria_list %}
-                            {% if loop.index != 1 %}
-                                </tr><tr>
-                            {% endif %}
-                            <td>{{ subcriteria.name }}</td>
-                            <td>{{ "{:.4f}".format((criteria_tuple[3][loop.index0]) * (results[2][i])) }}</td>
-                        {% endfor %}
-                    </tr>
+                        </tbody>
+                    </table>
+                </div>
                 {% endfor %}
-                
-            </tbody>
-        </table>
+            </div>
+            <!-- Criteria Weights and Rankings Tab -->
+            <div class="tab-pane fade" id="criteria-weights-rankings" role="tabpanel"
+                aria-labelledby="criteria-weights-rankings-tab">
+                <h2 class="mt-3">Criteria Weights and Rankings</h2>
+                {% for criteria_tuple in result_criterias %}
+                {% set criteria_name, subcriteria_list, _, _, _, CR, _, _ = criteria_tuple %}
+                <h3>{{ criteria_name }}</h3>
+                <div class="table-responsive">
+                    <table class="table table-light table-striped">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Sub-criterion</th>
+                                <th>Weight (%)</th>
+                                <th>Ranking</th>
+                                <th>Normalize</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for subcriteria in subcriteria_list %}
+                            <tr>
+                                <td>{{ subcriteria.name }}</td>
+                                <td>{{ "{:.2f}".format(criteria_tuple[3][loop.index0]) }}%</td>
+                                <td>{{ criteria_tuple[6][loop.index0] }}</td>
+                                <td>{{ criteria_tuple[7][loop.index0] }}</td>
+                            </tr>
+                            {% endfor %}
+                            <tr>
+                                <td colspan="3"><strong>CR Value:</strong></td>
+                                <td><strong>{{ CR }}</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                {% endfor %}
+            </div>
+            <!-- Criteria and Subcriteria Weights Tab -->
+            <div class="tab-pane fade" id="criteria-subcriteria-weights" role="tabpanel"
+                aria-labelledby="criteria-subcriteria-weights-tab">
+                <h2 class="mt-3">Criteria and Subcriteria Weights</h2>
+                <div class="table-responsive">
+                    <table class="table table-light table-striped">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Parent Criteria</th>
+                                <th>Weight (%)</th>
+                                <th>Subcriteria</th>
+                                <th>Subcriteria Weight (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for criteria_tuple,i in zip(result_criterias,range(results[0]|length)[::-1]) %}
+                            {% set criteria_name, subcriteria_list, weights, _, _, ranking, _, _ = criteria_tuple %}
+                            <tr>
+                                <td rowspan="{{ subcriteria_list|length }}">{{ criteria_name }}</td>
+                                <td rowspan="{{ subcriteria_list|length }}">{{ "{:.4f}".format(results[2][i]) }}</td>
+                                {% for subcriteria in subcriteria_list %}
+                                {% if loop.index != 1 %}
+                                </tr><tr>
+                                {% endif %}
+                                <td>{{ subcriteria.name }}</td>
+                                <td>{{ "{:.4f}".format((criteria_tuple[3][loop.index0]) * (results[2][i])) }}</td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- Sub Comparison Matrix Tab -->
+            <div class="tab-pane fade" id="sub-comparison-matrix" role="tabpanel"
+                aria-labelledby="sub-comparison-matrix-tab">
+                <h2 class="mt-3">Sub Comparison Matrix</h2>
+                {% for criteria_tuple in result_criterias %}
+                {% set criteria_name, subcriteria_list, weights, _, _, ranking, _, _ = criteria_tuple %}
+                <h3>{{ criteria_name }}</h3>
+                <div class="table-responsive">
+                    <table class="table table-light table-bordered">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Sub-criterion</th>
+                                {% for subcriterion in subcriteria_list %}
+                                <th>{{ subcriterion.name }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for subcriterion in subcriteria_list %}
+                            <tr>
+                                <td>{{ subcriterion.name }}</td>
+                                {% for comparison in subcriterion.comparisons.values() %}
+                                <td>{{ "{:.2f}".format(comparison) }}</td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endfor %}
+            </div>
+            <!-- Tree Tab -->
+            <div class="tab-pane fade show active" id="tree" role="tabpanel" aria-labelledby="tree-tab">
+                <!-- Your tree content goes here -->
+                <div class="row">
+                    <div class="tree">
+                        <ul>
+                            <li>
+                                <a><span>Criterias</span></a>
+                                <ul>
+                                    {% for criteria_tuple in result_criterias %}
+                                    <li>
+                                        <a><span>{{ criteria_tuple[0] }}</span></a>
+                                        {% if criteria_tuple[1] %}
+                                        <ul>
+                                            {% for subcriteria in criteria_tuple[1] %}
+                                            <li>
+                                                <a><span>{{ subcriteria.name }}</span></a>
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                        {% endif %}
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Next Button -->
+        <div class="mt-3 d-grid gap-2">
+            <a href="{{ url_for('topsys') }}" class="btn btn-primary">Next</a>
+        </div>
     </div>
-    <a href="{{ url_for('topsys') }}" class="btn btn-primary">Next</a>
 
-</div>
-
-<!-- Bootstrap JS and dependencies -->
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.9.3/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
+
 </html>
