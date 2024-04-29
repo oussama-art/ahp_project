@@ -6,6 +6,7 @@
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
+    {% include 'top-menu.html' %}
     <div class="container mt-4">
         <form id="topsisForm" action="{{ url_for('process_topsis') }}" method="post">
             <div class="row">
@@ -47,8 +48,9 @@
                     
                     {% endfor %}
 
-
+                    <div class='d-grid gap-2'>
                     <button type="submit" class="btn btn-primary">Calculate TOPSIS</button>
+                    </div>
                 </div>
             </div>
         </form>

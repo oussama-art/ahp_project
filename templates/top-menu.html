@@ -17,8 +17,7 @@
 </head>
 <nav class="navbar sticky-top navbar-expand-lg navbar-light bg-light">
     <div class="container-fluid">
-        <a class="navbar-brand p-2 rounded bg-primary text-light fs-5 fw-bold font-monospace "
-            href="#">PFA</a>
+        <a class="navbar-brand p-2 rounded bg-primary text-light fs-5 fw-bold font-monospace " href="#">PFA</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
             aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -26,21 +25,21 @@
         <div class="collapse navbar-collapse">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item">
-                    <a class="py-2 d-none d-md-inline-block" href="{{ url_for('home') }}"><i class="fas fa-home"></i> Home</a>
+                    <a class="nav-link" href="{{ url_for('home') }}"><i class="fas fa-home"></i> Home</a>
                 </li>
                 <li class="nav-item">
-                    <a class="py-2 d-none d-md-inline-block" href="{{ url_for('profile') }}"><i class="fas fa-user-circle"></i>
-                        Profile</a>
+                    <a class="nav-link" href="{{ url_for('index') }}"><i class="fas fa-sign-out-alt"></i> AHP</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('profile') }}"><img src="{{ url_for('static', filename='profile.png') }}" alt="Profile" style="width: 24px; height: 24px;"></a>
                 </li>
                 <li class="nav-item">
-                    <a class="py-2 d-none d-md-inline-block" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i>
-                        Logout</a>
-                </li>
-                <li class="nav-item">
-                    <a class="py-2 d-none d-md-inline-block" href="{{ url_for('index') }}"><i class="fas fa-sign-out-alt"></i>
-                        AHP</a>
+                    <a class="nav-link" href="{{ url_for('logout') }}"><img src="{{ url_for('static', filename='logout.png') }}" alt="Logout" style="width: 24px; height: 24px;"></a>
                 </li>
             </ul>
         </div>
     </div>
 </nav>
+</html>

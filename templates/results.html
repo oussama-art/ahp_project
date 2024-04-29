@@ -7,14 +7,15 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
 </head>
 <body>
-    <div class="container">
-        <h1 class="mt-4">TOPSIS Results</h1>
-        
-        <div class="row mt-4">
-            <div class="col">
+    {% include 'top-menu.html' %}
+    <div class="container mt-3 ">
+        <h1 class="text-center">TOPSIS Results </h1>
+        <!-- haaaaaaaaaadi -->
+        <div >
+            <div class="text-center">
                 <h2>TOPSIS Analysis Results</h2>
                 <form id="topsisForm" action="/negative_postive_alter" method="post">
-                    <table class="table table-bordered">
+                    <table class="table table-light table-bordered">
                         <thead>
                             <tr>
                                 <th>Sub-Criteria</th>
@@ -37,16 +38,25 @@
                                     
                                     <!-- Checkboxes for maximizing and minimizing -->
                                     <td>
-                                        <input type="checkbox" name="maximize_{{ subcriterion }}" value="maximize" onchange="toggleCheckboxes(this)"> Maximize
-                                        <input type="checkbox" name="minimize_{{ subcriterion }}" value="minimize" onchange="toggleCheckboxes(this)"> Minimize
-                                    </td>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="maximize_{{ subcriterion }}" value="maximize" onchange="toggleCheckboxes(this)">
+                                            <label class="form-check-label" for="maximize_{{ subcriterion }}">Maximize</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="minimize_{{ subcriterion }}" value="minimize" onchange="toggleCheckboxes(this)">
+                                            <label class="form-check-label" for="minimize_{{ subcriterion }}">Minimize</label>
+                                        </div>
+                                        </td>
                                 </tr>
                             {% endfor %}
 
                         </tbody>
                         
                     </table>
-                    <button type="submit">Submit</button>
+                    <div class='d-grid gap-2'>
+
+                    <button class="btn btn-primary mt-3 btn-lg" type="submit">Submit</button>
+                        </div>
                 </form>
             </div>
         </div>    
