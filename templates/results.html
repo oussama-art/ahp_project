@@ -8,14 +8,14 @@
 </head>
 <body>
     {% include 'top-menu.html' %}
-    <div class="container mt-3 ">
+    <div class="container mt-3">
         <h1 class="text-center">TOPSIS Results </h1>
         <!-- haaaaaaaaaadi -->
-        <div >
+
             <div class="text-center">
                 <h2>TOPSIS Analysis Results</h2>
-                <form id="topsisForm" action="/negative_postive_alter" method="post">
-                    <table class="table table-light table-bordered">
+                <form class="table-responsive "  id="topsisForm" action="/negative_postive_alter" method="post">
+                    <table class="table border-light table-bordered">
                         <thead>
                             <tr>
                                 <th>Sub-Criteria</th>
@@ -59,7 +59,7 @@
                         </div>
                 </form>
             </div>
-        </div>    
+  
         
     </div>
 
