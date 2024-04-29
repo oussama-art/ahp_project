@@ -1,8 +1,10 @@
 {% extends 'layout.html' %}
-  
+
 {% block title %}Home{% endblock %}
-  
+
 {% block content %}
+{% include 'top-menu.html' %}
+
 <h1 class="h2">Dashboard</h1>
 <p>Welcome back, {{ username }}!</p>
 {% endblock %}
