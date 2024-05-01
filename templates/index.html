@@ -12,8 +12,10 @@
    
 </head>
 <body>
-    <h1>Enter the number of criteria:</h1>
+    <h1>Enter the name of the product:</h1>
     <form name="criteriaForm" method="POST" action="/index" >
+        <input type="text" name="nom_projet" >
+        <label for="">Enter the number of criteria</label>
         <input type="number" name="num_criteria" >
         <button type="submit">Next</button>
         <div id="error" class="error-message"></div>

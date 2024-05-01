@@ -10,6 +10,10 @@ import re
 from collections import OrderedDict
 from collections import defaultdict
 import math
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import math
 
 weight_dic = dict
 # oussamaaaaa
@@ -24,7 +28,7 @@ def jinja2_enumerate(iterable, start=0):
 
 @app.route('/sub_cri_results')
 def sub_cri_results():
-
+    global nom_pro
     total_weights = []
     results = get_last_inserted_result()
     result_criterias = get_last_inserted_result_criteria()
@@ -33,7 +37,7 @@ def sub_cri_results():
     for criteria_tuple in result_criterias:
         total_weight = sum(criteria_tuple[3])  # Sum of weights for the current criteria
         total_weights.append(total_weight)
-    return render_template('sub_cri_results.html', results=results, result_criterias=result_criterias, total_weights=total_weights)
+    return render_template('sub_cri_results.html', results=results, result_criterias=result_criterias, total_weights=total_weights,nom_pro=nom_pro)
 
 
 @app.route('/cri_results')
@@ -384,13 +388,18 @@ def home():
     # User is not loggedin redirect to login page
     return redirect(url_for('login'))
     
-
+nom_pro=None
 @app.route('/index', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
+        global nom_pro
+        print("indeeeeeeeeeex rouuuuuuute")
         num_criteria = int(request.form['num_criteria'])
+        name_project = (request.form['nom_projet'])
         print(num_criteria)
-        return redirect(url_for('add_criteria', num_criteria=num_criteria))
+        print("nom du project",name_project)
+        nom_pro=name_project
+        return redirect(url_for('add_criteria', num_criteria=num_criteria,name_project=name_project))
     return render_template('index.html')
     
 @app.route('/add_criteria/<int:num_criteria>', methods=['GET', 'POST'])
@@ -996,12 +1005,17 @@ def negative_postive_alter():
         
         # Exchange the weight of the first subcriterion with the weight of the current subcriterion
         modified_weights[subcriteria[0]], modified_weights[subcriteria[j]] = modified_weights[subcriteria[j]], modified_weights[subcriteria[0]]
-        print("{",modified_weights[subcriteria[0]],",",modified_weights[subcriteria[j]],"}")
+        print("{", modified_weights[subcriteria[0]], ",", modified_weights[subcriteria[j]], "}")
         # Store the results for this case
-        results_sensitivity.append({
+        case_results = {
             "criteria_exchange": (subcriteria[0], subcriteria[j]),
             "criteria_weights": modified_weights
-        })
+        }
+        
+
+        results_sensitivity.append(case_results)
+
+    
 
     # Row with equal weights
     equal_weight = {subcriterion: round(1 / len(subcriteria), 4) for subcriterion in subcriteria}
@@ -1009,13 +1023,113 @@ def negative_postive_alter():
         "criteria_exchange": ("Equal", "Weights"),
         "criteria_weights": equal_weight
     })
+    
+    for idx, case_result in enumerate(results_sensitivity, 1):
+        print(f"Case {idx}: {case_result['criteria_exchange']}")
+        print("Criteria Weights:", case_result.get('criteria_weights'))
+        if 'ranked_alternatives' in case_result:
+            print("Ranked Alternatives:", case_result['ranked_alternatives'])
+
+
+        
     # Print the results
     print("*****************************************************")
     print("results_sensitivity:", results_sensitivity)
+    # Analyse des variations de poids des critères et calcul des classements des alternatives pour chaque cas de sensibilité
+        # Créer une liste pour stocker les noms des alternatives
+    # Créer une liste pour stocker les noms des cas de sensibilité et les classements correspondants
+    sensitivity_cases = []
+    rankings_per_case = []
+
+    # Parcourir chaque cas de sensibilité
+    for case in results_sensitivity:
+        # Obtenir les noms des cas de sensibilité
+        sensitivity_cases.append(f"{case['criteria_exchange'][0]} → {case['criteria_exchange'][1]}")
+
+        # Obtenir les poids des critères pour ce cas
+        case_weights = case['criteria_weights']
+
+        # Initialiser les dictionnaires pour les distances positives et négatives
+        positive_distances = {}
+        negative_distances = {}
+
+        # Calculer A_star et A_minus pour ce cas de sensibilité
+        A_star = {criterion: max(alternative_values[alternative][criterion] for alternative in alternative_values) for criterion in case_weights}
+        A_minus = {criterion: min(alternative_values[alternative][criterion] for alternative in alternative_values) for criterion in case_weights}
+
+        # Calculer les distances positives et négatives pour chaque alternative avec les nouveaux poids des critères
+        for alternative, values in alternative_values.items():
+            # Initialiser les variables pour stocker les distances positives et négatives
+            positive_distance = 0
+            negative_distance = 0
+
+            # Calculer la distance positive
+            for criterion, weight in case_weights.items():
+                positive_distance += weight * (values[criterion] - A_star[criterion]) ** 2
+
+            # Calculer la distance négative
+            for criterion, weight in case_weights.items():
+                negative_distance += weight * (values[criterion] - A_minus[criterion]) ** 2
+
+            # Prendre la racine carrée des sommes des carrés pour obtenir les distances
+            positive_distance = math.sqrt(positive_distance)
+            negative_distance = math.sqrt(negative_distance)
+
+            # Stocker les distances positives et négatives pour l'alternative
+            positive_distances[alternative] = positive_distance
+            negative_distances[alternative] = negative_distance
+
+        # Recalculer les classements des alternatives avec les nouvelles distances positives et négatives
+        relative_closeness_coefficients = {}
+        for alternative in positive_distances:
+            positive_distance = positive_distances[alternative]
+            negative_distance = negative_distances[alternative]
+
+            # Calculer le coefficient de proximité relative
+            relative_closeness_coefficient = negative_distance / (positive_distance + negative_distance)
+            relative_closeness_coefficients[alternative] = relative_closeness_coefficient
+
+        # Classer les alternatives en fonction du coefficient de proximité relative
+        ranked_alternatives = sorted(relative_closeness_coefficients.items(), key=lambda x: x[1], reverse=True)
+        rankings = [rank for rank, (alternative, closeness_coefficient) in enumerate(ranked_alternatives, start=1)]
+        rankings_per_case.append(rankings)
+
+        # Stocker les noms des alternatives
+        alternatives = [alternative for alternative, _ in ranked_alternatives]
+
+        # Afficher les classements des alternatives pour ce cas de sensibilité
+        print("Classements des alternatives pour le cas de sensibilité:", case['criteria_exchange'])
+        for rank, (alternative, closeness_coefficient) in enumerate(ranked_alternatives, start=1):
+            print("Rang", rank, "-", alternative, ": Coefficient de proximité relative =", closeness_coefficient)
+
+    # Créer un graphique en lignes pour visualiser les changements de classement pour chaque alternative
+    plt.figure(figsize=(12, 8))
+    for alternative in alternative_values:
+        alternative_rankings = []
+        for i, rankings in enumerate(rankings_per_case):
+            alternative_rankings.append(rankings[alternative_ranks[alternative] - 1])
+        plt.plot(range(len(rankings_per_case)), alternative_rankings, marker='o', label=alternative)
+
+    # Définir les étiquettes de l'axe des abscisses comme les noms des cas de sensibilité
+    plt.xticks(range(len(rankings_per_case)), sensitivity_cases, rotation=45, ha='right')
+    plt.xlabel('Cas de sensibilité')
+    plt.ylabel('Classement')
+    plt.title('Changements des classements des alternatives pour chaque cas de sensibilité')
+    plt.legend(loc='upper right')
+   # Inverser l'axe y pour afficher les barres de haut en bas
+    plt.tight_layout()
+    plt.show()
+
 
     criteria_weights_sen = criteria_weights 
     results_sensitivity_sen = results_sensitivity
 
+    
+
+ 
+
+
+    
     return render_template('topsis_results.html', 
                            criteria_weights=criteria_weights, 
                            weighted_normalized_decision_matrix=weighted_normalized_decision_matrix,
@@ -1031,6 +1145,10 @@ def negative_postive_alter():
                            relative_closeness_coefficient=relative_closeness_coefficients,
                            alternative_ranks=alternative_ranks,
                            results_sensitivity=results_sensitivity)
+
+
+
+
 @app.route('/sensitivity')
 def sensitivity():
     print("sensitivity roooooooooooute ***********")
@@ -1049,3 +1167,109 @@ def get_subcriteria_names():
     return jsonify({'subcriteria_names': subcriteria_names})
 if __name__ == '__main__':
     app.run(debug=True)
+
+    #     # Iterate over each sensitivity case
+
+    #     # Initialize a dictionary to store ranks for each case
+ 
+    # all_case_results = []
+
+    # # Iterate over each sensitivity case
+    # for case_index, case in enumerate(results_sensitivity, start=1):
+    #     # Extract criteria weights for this case
+    #     case_criteria_weights = case["criteria_weights"]
+        
+    #     # Recalculate the weighted normalized decision matrix for this case
+    #     case_weighted_normalized_decision_matrix = {}
+    #     for criterion, value in weighted_normalized_decision_matrix.items():
+    #         case_weighted_normalized_decision_matrix[criterion] = [v * case_criteria_weights[criterion] for v in value]
+        
+    #     # Calculate A* and A- for this case
+    #     case_A_star = {}
+    #     case_A_minus = {}
+        
+    #     for subcriterion, values in case_weighted_normalized_decision_matrix.items():
+    #         # Calculate A* and A- for the current sub-criterion
+    #         if maximize_minimize2[subcriterion] == 'maximize':
+    #             case_A_star[subcriterion] = max(values)
+    #             case_A_minus[subcriterion] = min(values)
+    #             if case_A_minus[subcriterion] > case_A_star[subcriterion]:
+    #                 case_A_star[subcriterion], case_A_minus[subcriterion] = case_A_minus[subcriterion], case_A_star[subcriterion]
+    #         else:
+    #             case_A_star[subcriterion] = min(values)
+    #             case_A_minus[subcriterion] = max(values)
+
+        
+    #     # Calculate Euclidean distances for each alternative from the positive and negative ideal solutions for this case
+    #     case_positive_distances = {}
+    #     case_negative_distances = {}
+    #     for alternative, values in alternative_values.items():
+    #         # Calculate distance from the positive ideal solution
+    #         positive_distance = math.sqrt(sum((values[criterion] - case_A_star[criterion])**2 for criterion in values))
+    #         case_positive_distances[alternative] = positive_distance
+
+    #         # Calculate distance from the negative ideal solution
+    #         negative_distance = math.sqrt(sum((values[criterion] - case_A_minus[criterion])**2 for criterion in values))
+    #         case_negative_distances[alternative] = negative_distance
+
+        
+    #     # Calculate relative closeness coefficients for this case
+    #     case_relative_closeness_coefficients = {}
+    #     for alternative in case_positive_distances:
+    #         positive_distance = case_positive_distances[alternative]
+    #         negative_distance = case_negative_distances[alternative]
+    #         print("positive_distance",positive_distance)
+    #         # Calculate relative closeness coefficient
+    #         relative_closeness_coefficient = negative_distance / (positive_distance + negative_distance)
+            
+            
+    #         # Store the relative closeness coefficient for the alternative
+    #         case_relative_closeness_coefficients[alternative] = relative_closeness_coefficient
+
+    #     # Rank alternatives for this case
+    #     case_ranked_alternatives = sorted(case_relative_closeness_coefficients.items(), key=lambda x: x[1], reverse=True)
+        
+    #     # Store ranks for this case
+    #     case_alternative_ranks = {}
+    #     for rank, (alternative, closeness_coefficient) in enumerate(case_ranked_alternatives, start=1):
+    #         case_alternative_ranks[alternative] = rank
+
+    #     # Store the results for this case
+    #     case_result = {
+    #         "Case": f"Case{case_index}",
+    #         "A_star": case_A_star,
+    #         "A_minus": case_A_minus,
+    #         "Relative_Closeness_Coefficients": case_relative_closeness_coefficients,
+    #         "Alternative_Ranks": case_alternative_ranks
+    #     }
+
+    #     all_case_results.append(case_result)
+
+    # # Combine all case results into a DataFrame
+    # all_cases_df = pd.DataFrame(all_case_results)
+    # # Display the DataFrame with all case results
+    # print("All Cases Results:")
+    # print(all_cases_df)
+
+    # # Display the closeness coefficient with ranking of alternatives in a table
+    # for case_index, case_result in enumerate(all_case_results, start=1):
+    #     print(f"\nTable for Case{case_index}:")
+    #     case_alternative_ranks = case_result["Alternative_Ranks"]
+    #     df = pd.DataFrame(case_alternative_ranks.items(), columns=["Alternative", "Rank"])
+    #     print(df)
+
+    # # Graphical representation of the closeness coefficient with ranking of alternatives (you can use matplotlib or seaborn for plotting)
+    # # Here's an example of how you can visualize the ranks:
+    # import matplotlib.pyplot as plt
+
+    # for case_index, case_result in enumerate(all_case_results, start=1):
+    #     plt.figure()
+    #     case_alternative_ranks = case_result["Alternative_Ranks"]
+    #     alternatives = list(case_alternative_ranks.keys())
+    #     ranks = list(case_alternative_ranks.values())
+    #     plt.barh(alternatives, ranks)
+    #     plt.xlabel("Rank")
+    #     plt.ylabel("Alternative")
+    #     plt.title(f"Closeness Coefficient Ranking for Case{case_index}")
+    #     plt.gca().invert_yaxis()
+    #     plt.show()
