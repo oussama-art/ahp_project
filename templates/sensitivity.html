@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
     <title>Sensitivity process</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     {% include 'top-menu.html' %}
@@ -12,14 +13,13 @@
     <div class="container mt-4">
         <h1>Sensitivity</h1>
         <!-- Add a table to display sensitivity analysis results -->
-        <table id="sensitivityTable" class="table mt-4" >
+        <table id="sensitivityTable" class="table mt-4">
             <thead>
                 <tr>
                     <th>Case</th>
                     {% for subcriterion, weight in criteria_weights_sen.items() %}
                         <th>{{ subcriterion }}</th>
                     {% endfor %}
-
                 </tr>
             </thead>
             <tbody>
@@ -39,6 +39,23 @@
                 {% endfor %}
             </tbody>
         </table>
+        <div id="sensitivityData" style="display: none;">
+            <!-- Store sensitivity analysis data -->
+            {% for sensitivity_case in results_sensitivity_sen %}
+                <div class="sensitivityCase">
+                    <span class="caseLabel">{% if loop.last %}Equal{% else %}Case {{ loop.index }}{% endif %}</span>
+                    {% for subcriterion, weight in sensitivity_case["criteria_weights"].items() %}
+                        <span class="weight">{{ weight }}</span>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+        <!-- Canvas for sensitivity chart -->
+    
     </div>
+    <script>
+        
+    </script>
+
 </body>
 </html>

@@ -24,7 +24,7 @@ def jinja2_enumerate(iterable, start=0):
 
 @app.route('/sub_cri_results')
 def sub_cri_results():
-
+    global nom_pro
     total_weights = []
     results = get_last_inserted_result()
     result_criterias = get_last_inserted_result_criteria()
@@ -33,7 +33,7 @@ def sub_cri_results():
     for criteria_tuple in result_criterias:
         total_weight = sum(criteria_tuple[3])  # Sum of weights for the current criteria
         total_weights.append(total_weight)
-    return render_template('sub_cri_results.html', results=results, result_criterias=result_criterias, total_weights=total_weights)
+    return render_template('sub_cri_results.html', results=results, result_criterias=result_criterias, total_weights=total_weights,nom_pro=nom_pro)
 
 
 @app.route('/cri_results')
@@ -385,12 +385,18 @@ def home():
     return redirect(url_for('login'))
     
 
+nom_pro=None
 @app.route('/index', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
+        global nom_pro
+        print("indeeeeeeeeeex rouuuuuuute")
         num_criteria = int(request.form['num_criteria'])
+        name_project = (request.form['nom_projet'])
         print(num_criteria)
-        return redirect(url_for('add_criteria', num_criteria=num_criteria))
+        print("nom du project",name_project)
+        nom_pro=name_project
+        return redirect(url_for('add_criteria', num_criteria=num_criteria,name_project=name_project))
     return render_template('index.html')
     
 @app.route('/add_criteria/<int:num_criteria>', methods=['GET', 'POST'])
@@ -1049,3 +1055,16 @@ def get_subcriteria_names():
     return jsonify({'subcriteria_names': subcriteria_names})
 if __name__ == '__main__':
     app.run(debug=True)
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -12,10 +12,15 @@
         <h1 class="text-center mb-4 fs-4 font-monospace">Enter the number of criteria:</h1>
         <form class="was-validated" name="criteriaForm" method="POST" action="/index">
             <div class="form-group">
+                <input type="text" class="form-control mb-3" name="nom_projet" placeholder="Enter name of project" required>
+                <div class="invalid-feedback">Please enter project name.</div>
+            </div>
+            
+            <div class="form-group">
                 <input type="number" class="form-control mb-3" name="num_criteria" placeholder="Enter number of criteria" required>
                 <div class="invalid-feedback">Please enter the number of criteria.</div>
             </div>
-            
+
             <div class='d-grid gap-2'>
                 <button type="submit" class="btn btn-primary btn-lg btn-block">Next</button>
             </div>
