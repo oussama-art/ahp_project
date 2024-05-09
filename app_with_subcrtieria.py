@@ -83,6 +83,8 @@ def parse_json(value):
     except json.JSONDecodeError:
         return None
 
+
+
 class Criteria:
     def __init__(self, name):
         self.name = name
@@ -146,6 +148,13 @@ class Criteria:
     
 
 global_num_criteria = 0
+class Project :
+    def __init__(self,name):
+        self.name = name
+
+    def __str__(self):
+        return self.name
+
 class Product:
     def __init__(self): 
         self.criteria = []
@@ -160,6 +169,8 @@ class Product:
         self.negative_ideal_solution = None
         self.relative_closeness = None
         self.alternatives_scores = {}
+        self.project_id = None
+
 
     def add_alternative_scores(self, alternative_name, scores):
         self.alternatives_scores[alternative_name] = scores
@@ -319,7 +330,8 @@ class DatabaseManager:
         conn = psycopg2.connect(database=self.dbname, user=self.user, password=self.password,
                                 host=self.host, port=self.port)
         cur = conn.cursor()
-
+        id_pro=get_id_project(nom_pro)
+        print("id project in criteria table ",id_pro)
         for criterion_data in criteria_data:
             criterion_name, subcriteria_names, subcriteria_comparisons, weights, consistent, CR, rankings, normalized_subcriteria_weights = criterion_data
 
@@ -338,10 +350,10 @@ class DatabaseManager:
 
             # Execute the SQL query to insert data into the database
             cur.execute("""
-                INSERT INTO criteria(criterion_name, subcriteria_data, weights, consistent, consistency_ratio, ranking, normalized_subcriteria_weights)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO criteria(criterion_name, subcriteria_data, weights, consistent, consistency_ratio, ranking, normalized_subcriteria_weights,project_id)
+                VALUES (%s, %s, %s, %s, %s, %s, %s , %s)
             """, (criterion_name, json.dumps(subcriteria_data), json.dumps(weights_list),
-                bool(consistent), CR, json.dumps(rankings_list), json.dumps(normalized_subcriteria_weights))) 
+                bool(consistent), CR, json.dumps(rankings_list), json.dumps(normalized_subcriteria_weights),id_pro)) 
 
         # Commit the transaction and close the cursor and connection
         conn.commit()
@@ -350,7 +362,7 @@ class DatabaseManager:
 
 
 
-    def insert_result(self, criteria, comparisons, weights, consistent, CR, ranking, topsis_ranking, ideal_solution, negative_ideal_solution, relative_closeness):
+    def insert_result(self, criteria, comparisons, weights, consistent, CR, ranking, topsis_ranking, ideal_solution, negative_ideal_solution, relative_closeness,project_name):
         conn = psycopg2.connect(database=self.dbname, user=self.user, password=self.password,
                                 host=self.host, port=self.port)
         cur = conn.cursor()
@@ -364,17 +376,48 @@ class DatabaseManager:
                 if i != j:
                     comparison_dict[f"c{i+1}c{j+1}"] = value
             comparisons_jsonb.append(comparison_dict)
-        
+        id_pro=get_id_project(nom_pro)
+        print("id project",id_pro)
         cur.execute("""
-            INSERT INTO Product(criteria, comparisons, weights, consistent, consistency_ratio, ranking, topsis_ranking, ideal_solution, negative_ideal_solution, relative_closeness)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO Product(criteria, comparisons, weights, consistent, consistency_ratio, ranking, topsis_ranking, ideal_solution, negative_ideal_solution, relative_closeness,project_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s , %s)
         """, (json.dumps(criteria), json.dumps(comparisons_jsonb), json.dumps(weights_list),
-            bool(consistent), CR, json.dumps(ranking_list), json.dumps(topsis_ranking.tolist()), json.dumps(ideal_solution.tolist()), json.dumps(negative_ideal_solution.tolist()), json.dumps(relative_closeness.tolist())))
+            bool(consistent), CR, json.dumps(ranking_list), json.dumps(topsis_ranking.tolist()), json.dumps(ideal_solution.tolist()), json.dumps(negative_ideal_solution.tolist()), json.dumps(relative_closeness.tolist()),id_pro))
         
         conn.commit()
         cur.close()
         conn.close()
 
+    def insert_project(self,project_name):
+        conn = psycopg2.connect(database=self.dbname, user=self.user, password=self.password,
+                                host=self.host, port=self.port)
+        print("insert name of project")
+        print(project_name)
+        cur = conn.cursor()
+        cur.execute("INSERT INTO Project(name) VALUES (%s)", (project_name,))
+
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+
+
+def get_id_project(name1):
+    conn = psycopg2.connect(database="ahp_topsys_resultat", user="postgres",
+                            password="1234", host="localhost", port="5432")
+    cur = conn.cursor()
+    
+    cur.execute("SELECT id_proj FROM Project WHERE name = %s", (name1,))
+    all_ids = cur.fetchall()
+    
+    if all_ids:
+        last_id = all_ids[-1][0]  # Selecting the last ID from the list of IDs
+        print("Last ID in get_id_project:", last_id)
+    else:
+        last_id = None
+    
+    conn.close()
+    return last_id
 
 
 
@@ -398,17 +441,23 @@ def index():
         name_project = (request.form['nom_projet'])
         print(num_criteria)
         print("nom du project",name_project)
+        session['name_project'] = name_project
         nom_pro=name_project
-        return redirect(url_for('add_criteria', num_criteria=num_criteria,name_project=name_project))
+        return redirect(url_for('add_criteria', num_criteria=num_criteria))
     return render_template('index.html')
     
+
 @app.route('/add_criteria/<int:num_criteria>', methods=['GET', 'POST'])
 def add_criteria(num_criteria):
     if request.method == 'POST':
         criteria_names = [request.form[f'c{i+1}'] for i in range(num_criteria)]
         num_subcriteria = [int(request.form[f'num_subcriteria_{i+1}']) for i in range(num_criteria)]
+        nom_du_project = request.form['project_name']
+        print("add criteria route , project_name:",nom_du_project)
         session['criteria_names'] = criteria_names
         session['num_subcriteria'] = num_subcriteria
+        # session['project_name'] = project_name
+        
         # Redirect to compare_subcriteria route to compare sub-criteria
         return redirect(url_for('compare_criteria'))
     return render_template('add_criteria.html', num_criteria=num_criteria)
@@ -514,16 +563,18 @@ def enter_comparison():
 @app.route('/compare_criteria', methods=['GET','POST'])
 def compare_criteria():
     global global_num_criteria
+    global nom_pro
     print("compare_criteria route accessed") 
     criteria_names = session.get('criteria_names', [])
     num_subcriteria = session.get('num_subcriteria', [])
-    
+    project_name = session.get('project_name')
 
     if request.method == 'POST':
         print("I'm inside post request")
         # Handle comparisons for both criteria and sub-criteria
         form_data = dict(request.form)
         product = Product()
+        
 
         print("Form data", form_data)
         product.add_criteria(criteria_names)
@@ -540,6 +591,9 @@ def compare_criteria():
         
 
         print("Before calling compare_criteria method")
+        print("project_name:",nom_pro)
+        project=Project(nom_pro)
+        
 
         if not product.compare_criteria(form_data):
             return redirect(url_for('compare_criteria'))
@@ -560,11 +614,15 @@ def compare_criteria():
         
         # Insert results into the database
         db_manager = DatabaseManager("ahp_topsys_resultat", "postgres", "1234")
+        db_manager.insert_project(project.name)
+
+
         db_manager.insert_result(criteria_names, product.matrix, product.weights,
                                   product.consistent, product.CR, product.ranking,
                                   product.topsis_ranking, product.ideal_solution,
-                                  product.negative_ideal_solution, product.relative_closeness)
+                                  product.negative_ideal_solution, product.relative_closeness,project.name)
 
+        
         flash("Comparison values saved successfully.")
         if all(form_data.get(f'c{i+1}c{j+1}') for i in range(len(criteria_names)) for j in range(i+1, len(criteria_names))):
             return redirect(url_for('cri_results'))
@@ -608,10 +666,13 @@ def get_last_inserted_result_criteria():
     conn = psycopg2.connect(database="ahp_topsys_resultat", user="postgres",
                             password="1234", host="localhost", port="5432")
     cur = conn.cursor()
-    cur.execute("SELECT criterion_name,subcriteria_data ,subcriteria_comparisons, weights, consistent, consistency_ratio, ranking,normalized_subcriteria_weights FROM criteria ORDER BY id DESC LIMIT %s", (number_criteria,))
+    id_pro=get_id_project(nom_pro)
+    print("id project in get last inserted result criteria",id_pro)
+    cur.execute("SELECT criterion_name,subcriteria_data ,subcriteria_comparisons, weights, consistent, consistency_ratio, ranking,normalized_subcriteria_weights FROM criteria WHERE project_id = %s", (id_pro,))
     result = cur.fetchall()
     conn.close()
     return result
+
 DB_HOST = "localhost"
 DB_NAME = "ahp_topsys_resultat"
 DB_USER = "postgres"
@@ -747,6 +808,8 @@ def show_topsis_form():
         results = get_last_inserted_result()
         result_criterias = get_last_inserted_result_criteria()
 
+        print("*******route topsyss product",results)
+        print("******route topsyss criteria",result_criterias)
         # Calculate total weight for each criteria
         for criteria_tuple in result_criterias:
             total_weight = sum(criteria_tuple[3])  # Sum of weights for the current criteria
@@ -886,6 +949,7 @@ def negative_postive_alter():
     global weight_dic
     global criteria_weights_sen 
     global results_sensitivity_sen 
+    global alternative_ranks2
     criteria_weights = {}
     weighted_normalized_decision_matrix = defaultdict(list)
     maximize_minimize2 = {}
@@ -1038,11 +1102,42 @@ def negative_postive_alter():
     # Analyse des variations de poids des critères et calcul des classements des alternatives pour chaque cas de sensibilité
         # Créer une liste pour stocker les noms des alternatives
     # Créer une liste pour stocker les noms des cas de sensibilité et les classements correspondants
+
+
+
+    criteria_weights_sen = criteria_weights 
+    results_sensitivity_sen = results_sensitivity
+    alternative_noms=alternative_values
+    alternative_ranks2=alternative_ranks
+
+ 
+
+
+    
+    return render_template('topsis_results.html', 
+                           criteria_weights=criteria_weights, 
+                           weighted_normalized_decision_matrix=weighted_normalized_decision_matrix,
+                           results=results, result_criterias=result_criterias, maximize_minimize2=maximize_minimize2,
+                           A_star=A_star, A_minus=A_minus,
+                           alternative_values=alternative_values,
+                           positive_distances=positive_distances,
+                           negative_distances=negative_distances,
+                           alternative_noms= alternative_noms,
+                           weight_dic=weight_dic,
+                           positive_distance=positive_distances,
+                           negative_distance=negative_distances,
+                           relative_closeness_coefficient=relative_closeness_coefficients,
+                           alternative_ranks=alternative_ranks,
+                           results_sensitivity=results_sensitivity)
+
+
+@app.route('/graph_draw')
+def graph_draw():
     sensitivity_cases = []
     rankings_per_case = []
 
     # Parcourir chaque cas de sensibilité
-    for case in results_sensitivity:
+    for case in results_sensitivity_sen:
         # Obtenir les noms des cas de sensibilité
         sensitivity_cases.append(f"{case['criteria_exchange'][0]} → {case['criteria_exchange'][1]}")
 
@@ -1054,11 +1149,11 @@ def negative_postive_alter():
         negative_distances = {}
 
         # Calculer A_star et A_minus pour ce cas de sensibilité
-        A_star = {criterion: max(alternative_values[alternative][criterion] for alternative in alternative_values) for criterion in case_weights}
-        A_minus = {criterion: min(alternative_values[alternative][criterion] for alternative in alternative_values) for criterion in case_weights}
+        A_star = {criterion: max(alternative_noms[alternative][criterion] for alternative in alternative_noms) for criterion in case_weights}
+        A_minus = {criterion: min(alternative_noms[alternative][criterion] for alternative in alternative_noms) for criterion in case_weights}
 
         # Calculer les distances positives et négatives pour chaque alternative avec les nouveaux poids des critères
-        for alternative, values in alternative_values.items():
+        for alternative, values in alternative_noms.items():
             # Initialiser les variables pour stocker les distances positives et négatives
             positive_distance = 0
             negative_distance = 0
@@ -1104,10 +1199,10 @@ def negative_postive_alter():
 
     # Créer un graphique en lignes pour visualiser les changements de classement pour chaque alternative
     plt.figure(figsize=(12, 8))
-    for alternative in alternative_values:
+    for alternative in alternative_noms:
         alternative_rankings = []
         for i, rankings in enumerate(rankings_per_case):
-            alternative_rankings.append(rankings[alternative_ranks[alternative] - 1])
+            alternative_rankings.append(rankings[alternative_ranks2[alternative] - 1])
         plt.plot(range(len(rankings_per_case)), alternative_rankings, marker='o', label=alternative)
 
     # Définir les étiquettes de l'axe des abscisses comme les noms des cas de sensibilité
@@ -1119,41 +1214,14 @@ def negative_postive_alter():
    # Inverser l'axe y pour afficher les barres de haut en bas
     plt.tight_layout()
     plt.show()
-
-
-    criteria_weights_sen = criteria_weights 
-    results_sensitivity_sen = results_sensitivity
-
-    
-
- 
-
-
-    
-    return render_template('topsis_results.html', 
-                           criteria_weights=criteria_weights, 
-                           weighted_normalized_decision_matrix=weighted_normalized_decision_matrix,
-                           results=results, result_criterias=result_criterias, maximize_minimize2=maximize_minimize2,
-                           A_star=A_star, A_minus=A_minus,
-                           alternative_values=alternative_values,
-                           positive_distances=positive_distances,
-                           negative_distances=negative_distances,
-                           alternative_noms= alternative_noms,
-                           weight_dic=weight_dic,
-                           positive_distance=positive_distances,
-                           negative_distance=negative_distances,
-                           relative_closeness_coefficient=relative_closeness_coefficients,
-                           alternative_ranks=alternative_ranks,
-                           results_sensitivity=results_sensitivity)
-
-
-
+    return "Graph"
 
 @app.route('/sensitivity')
 def sensitivity():
     print("sensitivity roooooooooooute ***********")
     print("criteria_weights_sen",criteria_weights_sen)
     print("results_sensitivity_sen",results_sensitivity_sen)
+
 
     return render_template('sensitivity.html',criteria_weights_sen=criteria_weights_sen,
     results_sensitivity_sen=results_sensitivity_sen)
@@ -1203,7 +1271,7 @@ if __name__ == '__main__':
     #     # Calculate Euclidean distances for each alternative from the positive and negative ideal solutions for this case
     #     case_positive_distances = {}
     #     case_negative_distances = {}
-    #     for alternative, values in alternative_values.items():
+    #     for alternative, values in alternative_noms.items():
     #         # Calculate distance from the positive ideal solution
     #         positive_distance = math.sqrt(sum((values[criterion] - case_A_star[criterion])**2 for criterion in values))
     #         case_positive_distances[alternative] = positive_distance
@@ -1230,7 +1298,7 @@ if __name__ == '__main__':
     #     case_ranked_alternatives = sorted(case_relative_closeness_coefficients.items(), key=lambda x: x[1], reverse=True)
         
     #     # Store ranks for this case
-    #     case_alternative_ranks = {}
+    #     case_alternative_ranks2 = {}
     #     for rank, (alternative, closeness_coefficient) in enumerate(case_ranked_alternatives, start=1):
     #         case_alternative_ranks[alternative] = rank
 
@@ -1273,3 +1341,11 @@ if __name__ == '__main__':
     #     plt.title(f"Closeness Coefficient Ranking for Case{case_index}")
     #     plt.gca().invert_yaxis()
     #     plt.show()
+
+
+
+
+
+
+    
+
