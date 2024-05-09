@@ -5,19 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
     <title>Sensitivity process</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+    {% include 'top-menu.html' %}
+
     <div class="container mt-4">
         <h1>Sensitivity Analysis</h1>
         <!-- Add a table to display sensitivity analysis results -->
-        <table id="sensitivityTable" class="table mt-4" >
+        <table id="sensitivityTable" class="table mt-4">
             <thead>
                 <tr>
                     <th>Case</th>
                     {% for subcriterion, weight in criteria_weights_sen.items() %}
                         <th>{{ subcriterion }}</th>
                     {% endfor %}
-
                 </tr>
             </thead>
             <tbody>
@@ -37,82 +39,23 @@
                 {% endfor %}
             </tbody>
         </table>
+        <div id="sensitivityData" style="display: none;">
+            <!-- Store sensitivity analysis data -->
+            {% for sensitivity_case in results_sensitivity_sen %}
+                <div class="sensitivityCase">
+                    <span class="caseLabel">{% if loop.last %}Equal{% else %}Case {{ loop.index }}{% endif %}</span>
+                    {% for subcriterion, weight in sensitivity_case["criteria_weights"].items() %}
+                        <span class="weight">{{ weight }}</span>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+        <!-- Canvas for sensitivity chart -->
+    
     </div>
+    <script>
+        
+    </script>
+
 </body>
 </html>
-<!-- # Extract data for plotting
-# Extract alternative names and their ranks for each sensitivity case
-
-
-# Extract alternative names and their ranks for each sensitivity case
-# Extract alternative names and their ranks for each sensitivity case
-# alternative_names = list(alternative_ranks.keys())
-# num_cases = len(results_sensitivity)
-# alternative_ranks_by_case = {alternative: [] for alternative in alternative_names}
-
-# # Create x-axis values for each case
-# x_values = list(range(1, num_cases + 1))
-
-# for case_index, case in enumerate(results_sensitivity):
-#     for alternative in alternative_names:
-#         alternative_rank = alternative_ranks[alternative]
-#         alternative_ranks_by_case[alternative].append(alternative_rank)
-
-# # Plotting
-# plt.figure(figsize=(10, 6))
-# for alternative in alternative_names:
-#     plt.plot(x_values, alternative_ranks_by_case[alternative], marker='o', label=alternative)
-
-# plt.title('Changes in Alternative Ranks for Different Sensitivity Cases')
-# plt.xlabel('Sensitivity Cases')
-# plt.ylabel('Rank')
-# plt.xticks(x_values)
-# plt.legend()
-# plt.grid(True)
-# plt.tight_layout()
-
-# # Show plot
-# plt.show() -->
-
-<!-- 
-
-# scenarios = []
-# rankings = []
-
-# for scenario in results_sensitivity:
-#     # Extract scenario information
-#     criteria_exchange = scenario['criteria_exchange']
-#     criteria_weights = scenario['criteria_weights']
-
-#     # Apply the criteria weights to calculate the rankings
-#     weighted_normalized_decision_matrix = apply_weights(criteria_weights,weighted_normalized_decision_matrix)  # You need to implement apply_weights function
-#     positive_distances, negative_distances = calculate_distances(weighted_normalized_decision_matrix, A_star, A_minus)  # You need to implement calculate_distances function
-#     relative_closeness_coefficients = calculate_relative_closeness(positive_distances, negative_distances)  # You need to implement calculate_relative_closeness function
-
-#     # Extract rankings from relative closeness coefficients
-#     ranking_for_scenario = [alternative_ranks[alternative] for alternative in alternative_values.keys()]
-
-
-
-#     # Append scenario and its ranking
-#     scenarios.append(criteria_exchange)
-#     rankings.append(ranking_for_scenario)
-
-# # Plotting
-# plt.figure(figsize=(10, 6))
-# for i, rank in enumerate(rankings):
-#     plt.plot(range(1, len(rank) + 1), rank, marker='o', label=str(scenarios[i]))
-
-# # Labeling
-# plt.xlabel('Alternatives')
-# plt.ylabel('Ranking')
-# plt.title('Impact of Changes in Criteria Weights on Alternative Rankings')
-# plt.xticks(range(1, len(rank) + 1))
-# plt.legend(loc='upper right')
-# plt.grid(True)
-
-# # Show plot
-# plt.tight_layout()
-# plt.show()
-# Initialize a dictionary to store the changes in rank for each alternative
-# Extract alternative names -->

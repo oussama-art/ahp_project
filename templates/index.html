@@ -1,6 +1,3 @@
-{% extends 'layout.html' %}
-  
-{% block title %}Home{% endblock %}
 {% block content %}
 <!DOCTYPE html>
 <html lang="en">
@@ -8,18 +5,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Criteria Selection</title>
-    
-   
 </head>
 <body>
-    <h1>Enter the name of the product:</h1>
-    <form name="criteriaForm" method="POST" action="/index" >
-        <input type="text" name="nom_projet" >
-        <label for="">Enter the number of criteria</label>
-        <input type="number" name="num_criteria" >
-        <button type="submit">Next</button>
-        <div id="error" class="error-message"></div>
-    </form>
+    {% include 'top-menu.html' %}
+    <div class="cost container col-md-6">
+        <h1 class="text-center mb-4 fs-4 font-monospace">Enter the number of criteria:</h1>
+        <form class="was-validated" name="criteriaForm" method="POST" action="/index">
+            <div class="form-group">
+                <input type="text" class="form-control mb-3" name="nom_projet" placeholder="Enter name of project" required>
+                <div class="invalid-feedback">Please enter project name.</div>
+            </div>
+            
+            <div class="form-group">
+                <input type="number" class="form-control mb-3" name="num_criteria" placeholder="Enter number of criteria" required>
+                <div class="invalid-feedback">Please enter the number of criteria.</div>
+            </div>
+
+            <div class='d-grid gap-2'>
+                <button type="submit" class="btn btn-primary btn-lg btn-block">Next</button>
+            </div>
+            <div id="error" class="error-message mt-3 text-center"></div>
+        </form>
+    </div>
+
 </body>
 </html>
 {% endblock %}
