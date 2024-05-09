@@ -10,70 +10,62 @@
     </style>
 </head>
 <body>
-    <div class="container mt-4" id="app">
-        <div class="row">
-            <div class="col-md-6">
-                <input type="number" id="numAlternatives" placeholder="Number of Alternatives:">
-                <button class="btn btn-primary" onclick="addAlternatives()">Add Alternatives</button>
-                <div id="alternatives"></div>
+    {% include 'top-menu.html' %}
+    
+    <div class="justify-content-center align-items-center" id="app">
+        <div class="cost container col-md-6">
+            <h1 class="text-center mb-4 fs-4 font-monospace">Enter the number of Alternatives:</h1>
+            <input type="number" id="numAlternatives" placeholder="Number of Alternatives:" class="form-control">
+            <div id="alternatives"></div>
+            <div class="d-grid gap-2">
+                <button class="btn btn-primary mt-3 btn-lg" onclick="submitData()">Submit Data</button>
             </div>
-            <div class="col-md-6" id="criteriaSection"></div>
         </div>
-        <button class="btn btn-success mt-3" onclick="submitData()">Submit Data</button>
+        <div class="d-grid gap-2" id="criteriaSection"></div>
     </div>
 
     <script>
-        function addAlternatives() {
-            var numAlternatives = document.getElementById('numAlternatives').value;
+        document.getElementById('numAlternatives').addEventListener('input', function() {
+            var numAlternatives = this.value;
             var alternativesDiv = document.getElementById('alternatives');
             alternativesDiv.innerHTML = '';  // Clear existing alternatives
             for (let i = 0; i < numAlternatives; i++) {
-                alternativesDiv.innerHTML += `<input type="text" placeholder="Alternative ${i + 1}" class="form-control mb-2" id="alternative${i}">`;
+                alternativesDiv.innerHTML += `<input type="text" placeholder="Alternative ${i + 1}" class="form-control mt-3 mb-2 d-grid gap-2 alternative-input" id="alternative${i}" required>`;
             }
-        }
+        });
 
         function submitData() {
-           /* let alternatives = [];
             const numAlternatives = document.getElementById('numAlternatives').value;
-            for (let i = 0; i < numAlternatives; i++) {
-                let altValue = document.getElementById(`alternative${i}`).value;
-                if (altValue) {
-                    alternatives.push(altValue);
+
+            // Check if number of alternatives is empty or not a positive integer
+            if (!numAlternatives || numAlternatives <= 0 || !Number.isInteger(Number(numAlternatives))) {
+                alert('Please enter a valid number of alternatives.');
+                return;
+            }
+
+            // Check if all alternative fields are filled
+            const alternativeInputs = document.getElementsByClassName('alternative-input');
+            for (let input of alternativeInputs) {
+                if (!input.value) {
+                    alert('Please fill in all the alternative fields.');
+                    return;
                 }
             }
 
-            let queryString = alternatives.map((alt, index) => `alternative${index}=${encodeURIComponent(alt)}`).join('&');
-            window.location.href = `/topsyss?${queryString}`;*/
-                //window.location.href = `/topsyss?numAlternatives=${numAlternatives}`;
-
-
-            const numAlternatives = document.getElementById('numAlternatives').value;
-
             const form = document.createElement('form');
             form.method = 'post';
-            form.action = '{{ url_for("show_topsis_form") }}'; // Adjust this if your route name is different
-
-            // form.action = '/topsyss';  // The Flask route that will handle the form submission
-
+            form.action = '/topsyss';  // The route that will handle the form submission
 
             for (let i = 0; i < numAlternatives; i++) {
-            let altValue = document.getElementById(`alternative${i}`).value;
-            if (altValue) {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = `alternative${i}`;
-                input.value = altValue;
-                form.appendChild(input);
+                let altValue = document.getElementById(`alternative${i}`).value;
+                if (altValue) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = `alternative${i}`;
+                    input.value = altValue;
+                    form.appendChild(input);
+                }
             }
-        }
-            // Append hidden fields to the form for each alternative
-           /* alternatives.forEach((alt, index) => {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = `alternative${index}`;
-                input.value = alt;
-                form.appendChild(input);
-            });*/
 
             // Append a hidden field for the number of alternatives
             const numInput = document.createElement('input');
@@ -82,24 +74,9 @@
             numInput.value = numAlternatives;
             form.appendChild(numInput);
 
-
             // Append the form to the body and submit it
             document.body.appendChild(form);
             form.submit();
-            /*let criteria = []; // Assume you have a similar function to collect criteria
-
-            // Send data to Flask using fetch API
-            fetch('/submit_data', {
-                method: 'POST',
-                body: JSON.stringify({ alternatives, criteria }),
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            }).then(response => response.json())
-              .then(data => {
-                  // Handle response data
-                  console.log(data);
-              });*/
         }
     </script>
 

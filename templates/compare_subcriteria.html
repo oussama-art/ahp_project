@@ -17,6 +17,7 @@
 </head>
 
 <body>
+    {% include 'top-menu.html' %}
     <div class="cost container col-md-6">
         <h1 class="text-center mb-4 fs-4 font-monospace">Compare Sub-Criteria</h1>
         {% with messages = get_flashed_messages() %}
@@ -53,7 +54,6 @@
                         (hyphen-separated):</label>
                     <input type="text" class="form-control mb-3" id="subcriteria_names_{{ i }}"
                         name="subcriteria_names_{{ i }}" required oninput="updateComparisonLabels('{{ i }}')"><br>
-                    <button type="button" class="btn btn-primary mb-3" onclick="displayMatrix('{{ i }}')">Display Matrix</button>
                     <div id="matrix_{{ i }}" class="matrix">
                         <h3>Comparison Matrix</h3>
                         <table class="table">
@@ -160,19 +160,40 @@
 
         
             function updateComparisonLabels(index) {
-                var subcriteriaInputId = 'subcriteria_names_' + index;
-                var subcriteriaInput = document.getElementById(subcriteriaInputId);
-                var subcriteriaNames = subcriteriaInput.value.split('-');
-        
-                // Now you have the subcriteria names, you can use them to update your comparison labels
-                for (var j = 0; j < subcriteriaNames.length; j++) {
-                    for (var k = j + 1; k < subcriteriaNames.length; k++) {
-                        var comparisonLabelId = 'comparison_label_' + index + '_' + (j * subcriteriaNames.length + k + 1);
-                        var comparisonLabel = document.getElementById(comparisonLabelId);
-                        comparisonLabel.innerText = "Comparison between " + subcriteriaNames[j] + " and " + subcriteriaNames[k] + ":";
-                    }
-                }
+    var subcriteriaInputId = 'subcriteria_names_' + index;
+    var subcriteriaInput = document.getElementById(subcriteriaInputId);
+    var subcriteriaNames = subcriteriaInput.value.split('-');
+    var matrixId = 'matrix_' + index;
+    var matrix = document.getElementById(matrixId);
+    matrix.innerHTML = '';
+    var tableHtml = '<h3>Comparison Matrix</h3><table class="table">';
+    tableHtml += '<thead><tr><th scope="col"></th>';
+    subcriteriaNames.forEach(function(subcriterion) {
+        tableHtml += '<th scope="col">' + subcriterion + '</th>';
+    });
+    tableHtml += '</tr></thead><tbody>';
+    subcriteriaNames.forEach(function(subcriterion1, j) {
+        var row = j + 1; // Adjusting the row index to start from 1
+        tableHtml += '<tr><th scope="row">' + subcriterion1 + '</th>';
+        subcriteriaNames.forEach(function(subcriterion2, k) {
+            var col = k + 1; // Adjusting the column index to start from 1
+            tableHtml += '<td>';
+            if (row === col) {
+                tableHtml += '<input type="number" class="form-control" value="1" disabled>';
+            } else if (row < col) {
+                tableHtml += '<input type="number" class="form-control" name="c' + index + 's' + row + 'c' + index + 's' + col + '" required>';
+            } else {
+                tableHtml += '<input type="number" class="form-control" name="c' + index + 's' + row + 'c' + index + 's' + col + '" disabled>';
             }
+            tableHtml += '</td>';
+        });
+        tableHtml += '</tr>';
+    });
+    tableHtml += '</tbody></table>';
+    matrix.innerHTML = tableHtml;
+    matrix.style.display = 'block';
+}
+
         </script>
         
         

@@ -1,0 +1,366 @@
+body, html {
+    height: 100%;
+    padding: 0;
+    margin: 0; /* Remove default margin */
+    font-size: 1rem; /* Adjust the font size as needed */
+    font-family: 'Roboto Mono', monospace; /* Use a monospace font */
+  }
+  a {
+    color: white;
+  }
+  .container {
+    background-color: #f8f9fa; /* Light gray background color */
+    border-radius: 10px; /* Rounded corners */
+    padding: 30px; /* Padding inside the container */
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); /* Box shadow */
+  }
+  
+  
+  
+  .cost {
+    position: relative;
+    z-index: 1001;
+    margin-top: 20px;
+  }
+  
+  h1 {
+    font-size: 1.5rem; /* Smaller font size */
+    font-weight: bold; /* Bold font weight */
+    color: #333; /* Dark text color */
+    margin-bottom: 1rem; /* Bottom margin */
+  }
+  
+  
+  .personaliser {
+    padding: 5px 15px 5px 15px;
+    border-radius: 10px;
+  }
+  
+  
+  
+  .main-area {
+    position: fixed; /* Fixed position to cover the entire viewport */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1; /* Place it behind other content */
+    background: white;
+    
+    /* background-image: radial-gradient(at 71% 29%,rgb(252, 252, 252)0,transparent 58%),
+                      radial-gradient(at 44% 25%,rgb(215, 219, 208)0,transparent 44%),
+                      radial-gradient(at 2% 54%,hsla(330,92%,71%,1)0,transparent 57%),
+                      radial-gradient(at 2% 25%,hsla(347,76%,68%,1)0,transparent 46%),
+                      radial-gradient(at 10% 67%, hsla(164,63%,60%,1)0,transparent 46%),
+                      radial-gradient(at 90% 34%, hsla(86,74%,75%,1)0,transparent 40%),
+                      radial-gradient(at 55% 60%,hsla(336,85%,61%,1)0,transparent 45%); */
+    background-size: 100% 100%; 
+    overflow: auto; /* Allow scrolling */
+  }
+  
+  .circles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+  
+  @keyframes animate {
+    0% {
+        opacity: 1;
+        border-radius: 0;
+        transform: translateY(0) rotate(0deg);
+    }
+    100% {
+        opacity: 0;
+        border-radius: 50%;
+        transform: translateY(-1000px) rotate(720deg);
+    }
+  }
+  .btn-perso{
+   /* border: none;
+   background: transparent;
+   font-size: 20px;
+   margin: 10px;
+   color: #333; */
+  }
+  .btn-sub-activer{
+    color: blue;
+  }
+  .btn-sub-desactiver{
+    color: #333;
+  }
+  .circles div {
+    position: absolute;
+    display: block;
+    list-style: none;
+    width: 20px;
+    height: 20px;
+    background-color: rgb(13, 110, 253,0.1);
+    bottom: -150px;
+    animation: animate 25s linear infinite;
+  }
+  
+  /* Styles for individual circles go here */
+  
+  .circles div:nth-child(1){
+    left: 25%;
+    width: 80px;
+    height: 80px;
+    animation-delay: 0s;
+  }
+  .circles div:nth-child(2){
+    left: 10%;
+    width: 20px;
+    height: 20px;
+    animation-delay: 2s;
+    animation-duration: 12s;
+  }
+  .circles div:nth-child(3){
+    left: 70%;
+    width: 20px;
+    height: 20px;
+    animation-delay: 4s;
+  }
+  .circles div:nth-child(4){
+    left: 40%;
+    width: 60px;
+    height: 60px;
+    animation-delay: 0s;
+    animation-duration: 18s;
+  }
+  .circles div:nth-child(5){
+    left: 65%;
+    width: 20px;
+    height: 20px;
+    animation-delay: 0s;
+  }
+  .circles div:nth-child(6){
+    left: 75%;
+    width: 110px;
+    height: 110px;
+    animation-delay: 3s;
+  }
+  .circles div:nth-child(7){
+    left: 35%;
+    width: 150px;
+    height: 150px;
+    animation-delay: 7s;
+  }
+  .circles div:nth-child(8){
+    left: 50%;
+    width: 25px;
+    height: 25px;
+    animation-delay: 15s;
+    animation-duration: 45s;
+  }
+  .circles div:nth-child(9){
+    left: 20%;
+    width: 15px;
+    height: 15px;
+    animation-delay: 2s;
+    animation-duration: 35s;
+  }
+  .circles div:nth-child(10){
+    left: 85%;
+    width: 150px;
+    height: 150px;
+    animation-delay: 0s;
+    animation-duration: 11s;
+  }
+  
+  
+  
+  .tp .table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+  
+  .tp .table th,.tp .table td {
+    border: 1px solid black;
+    padding: 8px;
+    text-align: center;
+  }
+  
+  .tp .table th {
+    background-color: #f2f2f2;
+  }
+  
+  .tp .table-light {
+    background-color: #f2f2f2;
+  }
+  
+  
+  
+  
+  .tree {
+    width: 100%;
+    /* Adjusted to fill the entire width of the container */
+    height: auto;
+    text-align: center;
+    overflow-x: auto;
+    /* Added to enable horizontal scrolling if necessary */
+  }
+  
+  .tree ul {
+    padding-top: 20px;
+    white-space: nowrap;
+    /* Prevents wrapping of elements */
+    position: relative;
+    transition: .5s;
+  }
+  
+  .tree li {
+    display: inline-table;
+    text-align: center;
+    list-style-type: none;
+    position: relative;
+    padding: 10px;
+    transition: .5s;
+  }
+  
+  .tree li::before,
+  .tree li::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 50%;
+    border-top: 1px solid #ccc;
+    width: 70%;
+    height: 10px;
+  }
+  
+  .tree li::after {
+    right: auto;
+    left: 50%;
+    border-left: 1px solid #ccc;
+  }
+  
+  .tree li:only-child::after,
+  .tree li:only-child::before {
+    display: none;
+  }
+  
+  .tree li:only-child {
+    padding-top: 0;
+  }
+  
+  .tree li:first-child::before,
+  .tree li:last-child::after {
+    border: 0 none;
+  }
+  
+  .tree li:last-child::before {
+    border-right: 1px solid #ccc;
+    border-radius: 0 5px 0 0;
+    -webkit-border-radius: 0 5px 0 0;
+    -moz-border-radius: 0 5px 0 0;
+  }
+  
+  .tree li:first-child::after {
+    border-radius: 5px 0 0 0;
+    -webkit-border-radius: 5px 0 0 0;
+    -moz-border-radius: 5px 0 0 0;
+  }
+  
+  .tree ul ul::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    border-left: 1px solid #ccc;
+    width: 0;
+    height: 20px;
+  }
+  
+  .tree li a {
+    border: 1px solid #ccc;
+    padding: 10px;
+    display: inline-grid;
+    border-radius: 5px;
+    text-decoration-line: none;
+    border-radius: 5px;
+    transition: .5s;
+  }
+  
+  .tree li a img {
+    width: 50px;
+    height: 50px;
+    margin-bottom: 10px !important;
+    border-radius: 100px;
+    margin: auto;
+  }
+  
+  .tree li a span {
+    color: #666;
+    padding: 8px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 500;
+  }
+  
+  /*Hover-Section*/
+  .tree li a:hover,
+  .tree li a:hover i,
+  .tree li a:hover span,
+  .tree li a:hover+ul li a {
+    background: #c8e4f8;
+    color: #000;
+  
+  }
+  
+  .tree li a:hover+ul li::after,
+  .tree li a:hover+ul li::before,
+  .tree li a:hover+ul::before,
+  .tree li a:hover+ul ul::before {
+    border-color: #94a0b4;
+  }
+  
+  
+  
+  
+  
+  
+  
+  
+  .myTab p {
+    margin: 20px;
+    padding: 10px;
+    color: #666;
+    border: 1px solid #666;
+    border-radius: 10px;
+  }
+  
+  .criteria {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin: 50%;
+    height: 100%;
+  }
+  
+  .sub-criterias {
+    margin: 0;
+    padding: 0;
+  }
+  
+  .sub-criterias li {
+    list-style-type: none;
+  }
+  
+  /* Apply different background colors to alternating rows */
+  .myTab tr:nth-child(odd) .align-middle p {
+    background-color: #BFD1EC;
+    /* Light gray for odd rows */
+  }
+  
+  .myTab tr:nth-child(even) .align-middle p {
+    background-color: #e0e0e0;
+    /* Lighter gray for even rows */
+  }
+
+
+  

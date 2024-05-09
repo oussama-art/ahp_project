@@ -5,54 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Comparison Matrix</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .matrix-table {
-            margin-bottom: 20px;
-        }
-        .matrix-table th {
-            background-color: #f8f9fa;
-        }
-        .matrix-table input {
-            border: 1px solid #ced4da;
-            border-radius: .25rem;
-            padding: .375rem .75rem;
-        }
-    </style>
 </head>
 <body>
+    {% include 'top-menu.html' %}
     <div class="container mt-5">
         <h1 class="text-center mb-4">Comparison Matrix of Criteria</h1>
         <form action="{{ url_for('compare_criteria') }}" method="POST">
             <input type="hidden" name="criteria" value="{{ criteria | join(',') }}">
 
-            <table class="table matrix-table">
+            <table class="table table-bordered">
                 <thead>
                     <tr>
                         <th>Criteria</th>
                         {% for criterion in criteria %}
                         <th>{{ criterion }}</th>
                         {% endfor %}
-                        
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Creating comparison rows for each criterion -->
                     {% for i, criterion1 in jinja2_enumerate(criteria) %}
                     <tr>
                         <th scope="row">{{ criterion1 }}</th>
-                        <!-- Generating comparison cells -->
                         {% for j, criterion2 in jinja2_enumerate(criteria) %}
                         <td>
                             {% if i < j %}
-                            <input type="number" id="c{{ i+1 }}c{{ j+1 }}" name="c{{ i+1 }}c{{ j+1 }}" required>
+                            <input type="number" class="form-control" id="c{{ i+1 }}c{{ j+1 }}" name="c{{ i+1 }}c{{ j+1 }}" required>
                             {% elif i == j %}
-                            <input type="number" value="1" readonly>
+                            <input type="number" class="form-control" value="1" readonly>
                             {% else %}
-                            &mdash;
+                            <span>&mdash;</span>
                             {% endif %}
                         </td>
                         {% endfor %}
-                        
                     </tr>
                     {% endfor %}
                 </tbody>

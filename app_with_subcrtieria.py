@@ -1235,6 +1235,7 @@ def get_subcriteria_names():
     return jsonify({'subcriteria_names': subcriteria_names})
 if __name__ == '__main__':
     app.run(debug=True)
+<<<<<<< HEAD
 
     #     # Iterate over each sensitivity case
 
@@ -1349,3 +1350,5 @@ if __name__ == '__main__':
 
     
 
+=======
+>>>>>>> d67f88f6d0954c4ee4d75a3278354ad067dc9d81
