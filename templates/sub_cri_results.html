@@ -34,11 +34,7 @@
                     href="#criteria-subcriteria-weights" role="tab" aria-controls="criteria-subcriteria-weights"
                     aria-selected="false">Criteria and Subcriteria Weights</a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" id="sub-comparison-matrix-tab" data-toggle="tab"
-                    href="#sub-comparison-matrix" role="tab" aria-controls="sub-comparison-matrix"
-                    aria-selected="false">Sub Comparison Matrix</a>
-            </li>
+            
         </ul>
         <!-- Tab panes -->
         <div class="tab-content">
@@ -142,36 +138,7 @@
                 </div>
             </div>
             <!-- Sub Comparison Matrix Tab -->
-            <div class="tab-pane fade" id="sub-comparison-matrix" role="tabpanel"
-                aria-labelledby="sub-comparison-matrix-tab">
-                <h2 class="mt-3">Sub Comparison Matrix</h2>
-                {% for criteria_tuple in result_criterias %}
-                {% set criteria_name, subcriteria_list, weights, _, _, ranking, _, _ = criteria_tuple %}
-                <h3>{{ criteria_name }}</h3>
-                <div class="table-responsive">
-                    <table class="table table-light table-bordered">
-                        <thead class="thead-light">
-                            <tr>
-                                <th>Sub-criterion</th>
-                                {% for subcriterion in subcriteria_list %}
-                                <th>{{ subcriterion.name }}</th>
-                                {% endfor %}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for subcriterion in subcriteria_list %}
-                            <tr>
-                                <td>{{ subcriterion.name }}</td>
-                                {% for comparison in subcriterion.comparisons.values() %}
-                                <td>{{ "{:.2f}".format(comparison) }}</td>
-                                {% endfor %}
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% endfor %}
-            </div>
+            
             <!-- Tree Tab -->
             <div class="tab-pane fade show active" id="tree" role="tabpanel" aria-labelledby="tree-tab">
                 <!-- Your tree content goes here -->

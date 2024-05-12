@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Sub Criteria Comparison</title>
+    <!-- Bootstrap CSS CDN -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+    {% include 'top-menu.html' %}
+    
+    <div class="container mt-3">
+        <!-- Nav tabs -->
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            
+            <li class="nav-item">
+                <a class="nav-link " id="comparison-matrix-tab" data-toggle="tab" href="#comparison-matrix"
+                    role="tab" aria-controls="comparison-matrix" aria-selected="true">Comparison Matrix</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="criteria-weights-rankings-tab" data-toggle="tab"
+                    href="#criteria-weights-rankings" role="tab" aria-controls="criteria-weights-rankings"
+                    aria-selected="false">Criteria Weights and Rankings</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="criteria-subcriteria-weights-tab" data-toggle="tab"
+                    href="#criteria-subcriteria-weights" role="tab" aria-controls="criteria-subcriteria-weights"
+                    aria-selected="false">Criteria and Subcriteria Weights</a>
+            </li>
+            
+        </ul>
+        <!-- Tab panes -->
+        <div class="tab-content">
+            <!-- Comparison Matrix Tab -->
+           
+<div class="tab-pane fade" id="comparison-matrix" role="tabpanel" aria-labelledby="comparison-matrix-tab">
+    <h2 class="mt-3">Comparison Matrix</h2>
+    {% if project_informations %}
+        {% for project in project_informations %}
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <button class="btn btn-link" data-toggle="collapse" data-target="#project{{ project.id }}"
+                            aria-expanded="true" aria-controls="project{{ project.id }}">
+                            {{ project['name'] }}
+                        </button>
+                    </h4>
+                </div>
+                <div id="project{{ project.id }}" class="collapse" aria-labelledby="project{{ project.id }}"
+                    data-parent="#comparison-matrix">
+                    <div class="card-body">
+                        {% for criterion_info in project['data'] %}
+                            <h5>{{ criterion_info[0] }}</h5>
+                            <div class="table-responsive">
+                                <table class="table table-light table-bordered">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th>Sub-criterion</th>
+                                            {% for subcriterion in criterion_info[1] %}
+                                                <th>{{ subcriterion['name'] }}</th>
+                                            {% endfor %}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for subcriterion in criterion_info[1] %}
+                                            <tr>
+                                                <td>{{ subcriterion['name'] }}</td>
+                                                {% for comparison in subcriterion['comparisons'].values() %}
+                                                    <td>{{ "{:.2f}".format(comparison) }}</td>
+                                                {% endfor %}
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No project data available.</p>
+    {% endif %}
+</div>
+
+<div class="tab-pane fade" id="criteria-weights-rankings" role="tabpanel"
+    aria-labelledby="criteria-weights-rankings-tab">
+    <h2 class="mt-3">Criteria Weights and Rankings</h2>
+    {% if project_informations %}
+        {% for project in project_informations %}
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <button class="btn btn-link" data-toggle="collapse" data-target="#project{{ project.id }}"
+                            aria-expanded="true" aria-controls="project{{ project.id }}">
+                            {{ project['name'] }}
+                        </button>
+                    </h4>
+                </div>
+                <div id="project{{ project.id }}" class="collapse" aria-labelledby="project{{ project.id }}"
+                    data-parent="#criteria-weights-rankings">
+                    <div class="card-body">
+                        {% for criterion_info in project['data'] %}
+                            <h5>{{ criterion_info[0] }}</h5>
+                            <div class="table-responsive">
+                                <table class="table table-light table-striped">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th>Sub-criterion</th>
+                                            <th>Weight (%)</th>
+                                            <th>Ranking</th>
+                                            <th>Normalize</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for subcriteria in criterion_info[1] %}
+                                        <tr>
+                                            <td>{{ subcriteria['name'] }}</td>
+                                            <td>{{ "{:.2f}".format(criterion_info[3][loop.index0]) }}%</td>
+                                            <td>{{ criterion_info[6][loop.index0] }}</td>
+                                            <td>{{ criterion_info[7][loop.index0] }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                        <tr>
+                                            <td colspan="3" class="table-danger"><strong>CR Value:</strong></td>
+                                            <td class="table-danger"> <strong>{{ CR }}</strong></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% if not loop.last %}
+                <hr> <!-- Add a horizontal line as separator -->
+            {% endif %}
+        {% endfor %}
+    {% else %}
+        <p>No project data available.</p>
+    {% endif %}
+</div>
+<!-- <div class="tab-pane fade" id="criteria-subcriteria-weights" role="tabpanel" aria-labelledby="criteria-subcriteria-weights-tab">
+    <h2 class="mt-3">Criteria and Subcriteria Weights</h2>
+    {% if project_informations %}
+        {% for project in project_informations %}
+            {% for criterion_info, cri in zip(project['data'], project['data_criteria']) %}
+                <div class="table-responsive">
+                    <table class="table table-light table-striped">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Parent Criteria</th>
+                                <th>Weight (%)</th>
+                                <th>Subcriteria</th>
+                                <th>Subcriteria Weight (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                          
+                        </tbody>
+                    </table>
+                </div>
+            {% endfor %}
+        {% endfor %}
+    {% else %}
+        <p>No project data available.</p>
+    {% endif %}
+</div> -->
+<div class="tab-pane fade" id="criteria-subcriteria-weights" role="tabpanel" aria-labelledby="criteria-subcriteria-weights-tab">
+    <h2 class="mt-3">Criteria and Subcriteria Weights</h2>
+    {% if project_informations %}
+        {% for project in project_informations %}
+            <div class="card mt-3">
+                <div class="card-header" id="project-{{ project['id'] }}-heading">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#project-{{ project['id'] }}-collapse" aria-expanded="true" aria-controls="project-{{ project['id'] }}-collapse">
+                            {{ project['name'] }}
+                        </button>
+                    </h5>
+                </div>
+
+                <div id="project-{{ project['id'] }}-collapse" class="collapse" aria-labelledby="project-{{ project['id'] }}-heading" data-parent="#criteria-subcriteria-weights">
+                    <div class="card-body">
+                        {% for criterion_product in project['data_criteria'] %}    
+                            {% for criterion_info in project['data'] %}
+                                <div class="table-responsive">
+                                    <table class="table table-light table-striped">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th>Criteria</th>
+                                                <th>Weight (%)</th>
+                                                <th>Subcriteria</th>
+                                                <th>Subcriteria Weight (%)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td rowspan="{{ criterion_info[1]|length + 1 }}">{{ criterion_info[0] }}</td>
+                                                
+                                                <td rowspan="{{ criterion_product[0]|length }}">{{ "{:.4f}".format(criterion_product[2][::-1][loop.index0]) }}</td>
+                                                {% set weight_parent_criteria = criterion_product[2][::-1][loop.index0] %}
+                                                
+                                                
+                                            
+                                            {% for subcriteria in criterion_info[1] %}
+                                            
+                                                
+                                                <td>{{ subcriteria['name'] }}</td>
+                                                
+                                                <td>{{ "{:.4f}".format((criterion_info[3][loop.index0]) * weight_parent_criteria) }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% endfor %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No project data available.</p>
+    {% endif %}
+</div>
+
+
+
+
+<!-- Add other tabs similarly -->
+
+            <!-- Criteria and Subcriteria Weights Tab -->
+            
+            <!-- Sub Comparison Matrix Tab -->
+            
+            <!-- Tree Tab -->
+            
+        </div>
+        <!-- Next Button -->
+        
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+
+</html>

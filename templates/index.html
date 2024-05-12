@@ -9,7 +9,7 @@
 <body>
     {% include 'top-menu.html' %}
     <div class="cost container col-md-6">
-        <h1 class="text-center mb-4 fs-4 font-monospace">Enter the number of criteria:</h1>
+        <h1 class="text-center mb-4 fs-4 font-monospace">Enter Informations of the project:</h1>
         <form class="was-validated" name="criteriaForm" method="POST" action="/index">
             <div class="form-group">
                 <input type="text" class="form-control mb-3" name="nom_projet" placeholder="Enter name of project" required>
@@ -17,7 +17,7 @@
             </div>
             
             <div class="form-group">
-                <input type="number" class="form-control mb-3" name="num_criteria" placeholder="Enter number of criteria" required>
+                <input type="number" class="form-control mb-3" name="num_criteria" placeholder="Enter number of criteria of project" required>
                 <div class="invalid-feedback">Please enter the number of criteria.</div>
             </div>
 

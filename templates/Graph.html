@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exchange Data</title>
+</head>
+<body>
+    <table>
+        <thead>
+            <tr>
+                <th>Exchange Case</th>
+                {% for alternative_name in alternative_noms %}
+                    <th>{{ alternative_name }}</th>
+                {% endfor %}
+                <th>Rank</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for data in exchange_data %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    {% for alt_name in data['ranked_alternatives'] %}
+                        <td>{{ data['Ci_values'][alt_name] }}</td>
+                    {% endfor %}
+                    <td>{{ data['ranked_alternatives'] }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="{{ url_for('designer_graph') }}" class="btn btn-primary">Show Graphe</a>
+</body>
+</html>
