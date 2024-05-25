@@ -161,3 +161,11 @@ Create a new branch (git checkout -b feature-branch).
 Make your changes and commit them (git commit -m 'Add new feature').
 Push to the branch (git push origin feature-branch).
 Create a new Pull Request.
+
+
+# Video Demonstration
+
+Click the link below to watch a demonstration video:
+
+
+https://github.com/OUSSAMAOUHA/SmartBendEd_Plateform/assets/96892805/52db9341-e7e6-49ed-9984-da43071858ea
