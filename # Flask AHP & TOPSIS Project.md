@@ -168,4 +168,4 @@ Create a new Pull Request.
 Click the link below to watch a demonstration video:
 
 
-https://github.com/OUSSAMAOUHA/SmartBendEd_Plateform/assets/96892805/52db9341-e7e6-49ed-9984-da43071858ea
+[https://github.com/OUSSAMAOUHA/SmartBendEd_Plateform/assets/96892805/52db9341-e7e6-49ed-9984-da43071858ea](https://github.com/oussama-art/ahp_project/blob/main/static/demo.mp4)
