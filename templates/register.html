@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="{{ url_for('static', filename='icone_page.png') }}" type="image/x-icon">
     <title>Register</title>
     <!-- External CSS -->
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css">
@@ -19,6 +20,20 @@
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            AHP <img src="{{ url_for('static', filename='la-prise-de-decision.png') }}" alt="AHP Icon" style="width: 20px; height: 20px;">
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            Topsys <img src="{{ url_for('static', filename='choix.png') }}" alt="Topsys Icon" style="width: 20px; height: 20px;">
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </div>
     </nav>
 
@@ -68,5 +83,18 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.min.js"></script>
-    </body>
+
+    {% if success %}
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const successAlert = document.querySelector('.alert-success');
+            if (successAlert) {
+                setTimeout(() => {
+                    window.location.href = "{{ url_for('login') }}";
+                }, 1000); // Redirect after 3 seconds
+            }
+        });
+    </script>
+    {% endif %}
+</body>
 </html>

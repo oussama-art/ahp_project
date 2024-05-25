@@ -3,31 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="../static/icone_page.png" type="image/x-icon">
     <title>Exchange Data</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Custom CSS to style the table */
+        table {
+            width: 100%;
+            margin-bottom: 1rem;
+            color: #212529;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 0.75rem;
+            vertical-align: top;
+            border-top: 1px solid #dee2e6;
+        }
+        thead {
+            background-color: #f8f9fa;
+            color: #6c757d;
+        }
+    </style>
 </head>
 <body>
-    <table>
-        <thead>
-            <tr>
-                <th>Exchange Case</th>
-                {% for alternative_name in alternative_noms %}
-                    <th>{{ alternative_name }}</th>
-                {% endfor %}
-                <th>Rank</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for data in exchange_data %}
+    <div class="container">
+        <table class="table table-bordered">
+            <thead class="thead-light">
                 <tr>
-                    <td>{{ loop.index }}</td>
-                    {% for alt_name in data['ranked_alternatives'] %}
-                        <td>{{ data['Ci_values'][alt_name] }}</td>
+                    <th>Exchange Case</th>
+                    {% for alternative_name in alternative_noms %}
+                        <th>{{ alternative_name }}</th>
                     {% endfor %}
-                    <td>{{ data['ranked_alternatives'] }}</td>
+                    <th>Rank</th>
                 </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    <a href="{{ url_for('designer_graph') }}" class="btn btn-primary">Show Graphe</a>
+            </thead>
+            <tbody>
+                {% for data in exchange_data %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        {% for alt_name in data['ranked_alternatives'] %}
+                            <td>{{ data['Ci_values'][alt_name] }}</td>
+                        {% endfor %}
+                        <td>{{ data['ranked_alternatives'] }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <a href="{{ url_for('designer_graph') }}" class="btn btn-primary">Show Graph</a>
+    </div>
+    <!-- Bootstrap JS (optional, for certain features like dropdowns, modals, etc.) -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

@@ -1,9 +1,62 @@
 
 
-
 {% block content %}
 {% include 'top-menu.html' %}
-
-<h1 class="h2">Dashboard</h1>
-<p>Welcome back, {{ username }}!</p>
 {% endblock %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="../static/icone_page.png" type="image/x-icon">
+    <title>Home</title>
+</head>
+<body>
+    
+
+<div class="container" style="margin-top: 2%;">
+    <h1 class="h2">AHP-TOPSYS</h1>
+    <p>
+        Analytic Hierarchy Process (AHP) and Technique for Order of Preference by Similarity to Ideal Solution (TOPSIS) 
+        are decision-making methods used to prioritize alternatives based on multiple criteria.
+    </p>
+    <p>
+        AHP helps in structuring complex decision problems into a hierarchical model, where criteria and alternatives 
+        are compared pairwise to determine their relative importance. TOPSIS, on the other hand, ranks alternatives 
+        based on their similarity to the ideal solution and their distance from the worst solution.
+    </p>
+    <p>
+        To start your own project using AHP-TOPSYS, click the button below.
+    </p>
+    <a href="{{ url_for('index') }}" class="btn btn-primary">Start Your Project</a>
+</div>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">AHP</h5>
+                    <p class="card-text">
+                        Analytic Hierarchy Process (AHP) is a decision-making method developed by Thomas L. Saaty in the 1970s. 
+                        It is used to prioritize alternatives by evaluating multiple criteria in a structured and systematic manner.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">TOPSIS</h5>
+                    <p class="card-text">
+                        Technique for Order of Preference by Similarity to Ideal Solution (TOPSIS) is a multi-criteria decision-making 
+                        method used to rank alternatives based on their distance from the ideal solution and their proximity to the worst solution.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -5,6 +5,7 @@
     <title>Title</title>
     <!-- Bootstrap CSS CDN -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="icon" href="../static/icone_page.png" type="image/x-icon">
 </head>
 <body>
     {% include 'top-menu.html' %}
@@ -55,7 +56,7 @@
                         <tr>
                             <th>Criteria</th>
                             <th>Weight (%)</th>
-                            <th>Ranking</th>
+                           
                         </tr>
                     </thead>
                     <tbody>
@@ -63,7 +64,7 @@
                         <tr>
                             <td>{{ results[0][i] }}</td>
                             <td>{{ "{:.2f}".format(results[2][i] * 100) }}%</td>
-                            <td>{{ results[5][i] }}</td>
+                           
                         </tr>
                         {% endfor %}
                     </tbody>

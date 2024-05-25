@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="../static/icone_page.png" type="image/x-icon">
     <title>Login</title>
     <!-- External CSS -->
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="icon" href="../static/icone_page.png" type="image/x-icon">
     <!-- Internal CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
@@ -19,56 +21,80 @@
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            AHP <img src="../static/la-prise-de-decision.png" alt="AHP Icon" style="width: 20px; height: 20px;">
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            Topsys <img src="../static/choix.png" alt="Topsys Icon" style="width: 20px; height: 20px;">
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </div>
     </nav>
-
     
-    <!-- Login Form -->
-    <div class="container col-md-6">
-        <div class="card mt-5">
-            <h1 class="text-center mt-4 fs-4 font-monospace">Login Form</h1>
-            <div class="cost container col-md-6">
-                <form class="needs-validation" novalidate action="{{ url_for('login') }}" method="post">
-                    <div class="mb-3">
-                        <label for="username" class="form-label">Username</label>
-                        <input type="text" class="form-control" name="username" id="username" placeholder="Username"
-                            required>
-                        <div class="invalid-feedback">Please enter your username.</div>
+    
+
+    <!-- Card with Image and Form -->
+    <div class="container">
+        <div class="card mt-5 shadow">
+            <div class="card-body">
+                <div class="row row-cols-auto">
+                    <div class="col-md-6">
+                        <img src="../static/4604184.jpg"
+                            class="img-fluid" alt="Phone image">
                     </div>
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Password</label>
-                        <input type="password" class="form-control" name="password" id="password"
-                            placeholder="Password" required>
-                        <div class="invalid-feedback">Please enter your password.</div>
+                    <div class="col-md-6">
+                        <h1 class="text-center mt-4 fs-4 font-monospace" style="color:cadetblue">Welcome to AHP-TOPSYS</h1>
+                        <h2 class="text-center mt-4 fs-4 font-monospace" style="color:cadetblue">Plateform</h2>
+                        <div class="cost container col-md-6">
+                            <form class="needs-validation" novalidate action="{{ url_for('login') }}" method="post">
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">Username</label>
+                                    <input type="text" class="form-control" name="username" id="username" placeholder="Username"
+                                        required>
+                                    <div class="invalid-feedback">Please enter your username.</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="password" class="form-label">Password</label>
+                                    <input type="password" class="form-control" name="password" id="password"
+                                        placeholder="Password" required>
+                                    <div class="invalid-feedback">Please enter your password.</div>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input type="checkbox" class="form-check-input" id="remember">
+                                    <label class="form-check-label" for="remember">Remember me</label>
+                                </div>
+                                <div class='d-grid gap-2'>
+                                    <button type="submit" class="btn btn-primary btn-lg btn-block">Login</button>
+                                </div>
+                            </form>
+                            <!-- Flash Messages -->
+                            {% with messages = get_flashed_messages() %}
+                                {% if messages %}
+                                    {% for message in messages %}
+                                        <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+                                            {{ message }}
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            {% endwith %}
+                            <p class="text-center mt-3">No account? <a href="{{ url_for('register') }}">Register</a></p>
+                        </div>
                     </div>
-                    <div class="form-check mb-3">
-                        <input type="checkbox" class="form-check-input" id="remember">
-                        <label class="form-check-label" for="remember">Remember me</label>
-                    </div>
-                    <div class='d-grid gap-2'>
-                        <button type="submit" class="btn btn-primary btn-lg btn-block">Login</button>
-                    </div>
-                </form>
-                <!-- Flash Messages -->
-                {% with messages = get_flashed_messages() %}
-                    {% if messages %}
-                        {% for message in messages %}
-                            <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-                        {% endfor %}
-                    {% endif %}
-                {% endwith %}
-                <p class="text-center mt-3">No account? <a href="{{ url_for('register') }}">Register</a></p>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Bootstrap JS (optional) -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
     <!-- Bootstrap Validation Script -->
     <script>
         (function () {

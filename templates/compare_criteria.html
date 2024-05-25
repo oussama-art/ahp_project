@@ -1,10 +1,11 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Comparison Matrix</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="icon" href="../static/icone_page.png" type="image/x-icon">
 </head>
 <body>
     {% include 'top-menu.html' %}
@@ -50,5 +51,85 @@
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.9.3/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+<script>
+    
+</script>
+</html> -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparison Matrix</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="icon" href="../static/icone_page.png" type="image/x-icon">
+</head>
+<body>
+    {% include 'top-menu.html' %}
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Comparison Matrix of Criteria</h1>
+        <form action="{{ url_for('compare_criteria') }}" method="POST">
+            <input type="hidden" name="criteria" value="{{ criteria | join(',') }}">
+
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Criteria</th>
+                        {% for criterion in criteria %}
+                        <th>{{ criterion }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for i, criterion1 in jinja2_enumerate(criteria) %}
+                    <tr>
+                        <th scope="row">{{ criterion1 }}</th>
+                        {% for j, criterion2 in jinja2_enumerate(criteria) %}
+                        <td>
+                            {% if i < j %}
+                            <input type="number" class="form-control" id="c{{ i+1 }}c{{ j+1 }}" name="c{{ i+1 }}c{{ j+1 }}" onchange="updateValues(this)" required>
+                            {% elif i == j %}
+                            <input type="number" class="form-control" value="1" readonly>
+                            {% else %}
+                            <span id="opposite_{{ i+1 }}_{{ j+1 }}">&mdash;</span>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div class="text-right">
+                <button type="submit" class="btn btn-primary">Next</button>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        function updateValues(input) {
+            var value = input.value;
+            var id = input.id;
+            var ids = id.split('c');
+            var row = parseInt(ids[1]);
+            var col = parseInt(ids[2]);
+            var oppositeSpan = document.getElementById('opposite_' + col + '_' + row);
+            
+
+            
+            
+            
+            if (value !== '0') {
+                oppositeSpan.textContent = 1 / parseFloat(value);
+                
+            } else {
+                oppositeSpan.textContent = '\u2014';
+                
+            }
+        }
+    </script>
 </body>
 </html>

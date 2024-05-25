@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="../static/icone_page.png" type="image/x-icon">
     <title>Criteria Selection</title>
 </head>
 <body>
@@ -12,12 +13,12 @@
         <h1 class="text-center mb-4 fs-4 font-monospace">Enter Informations of the project:</h1>
         <form class="was-validated" name="criteriaForm" method="POST" action="/index">
             <div class="form-group">
-                <input type="text" class="form-control mb-3" name="nom_projet" placeholder="Enter name of project" required>
+                <input type="text" class="form-control mb-3" name="nom_projet" placeholder="Enter name of project" >
                 <div class="invalid-feedback">Please enter project name.</div>
             </div>
             
             <div class="form-group">
-                <input type="number" class="form-control mb-3" name="num_criteria" placeholder="Enter number of criteria of project" required>
+                <input type="number" class="form-control mb-3" name="num_criteria" placeholder="Enter number of criteria of project" >
                 <div class="invalid-feedback">Please enter the number of criteria.</div>
             </div>
 
@@ -29,5 +30,6 @@
     </div>
 
 </body>
+    {% endblock %}
 </html>
-{% endblock %}
+
