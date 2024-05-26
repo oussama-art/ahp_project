@@ -15,9 +15,6 @@ This project is a web application built with Flask that performs AHP (Analytic H
 - [Dependencies](#dependencies)
 - [Contributing](#contributing)
 - [Demonstration](#demonstration)
-
-
-
 ## Overview
 
 This Flask application facilitates decision-making by implementing the AHP and TOPSIS methods. Users can input criteria and sub-criteria, perform pairwise comparisons, and obtain rankings for various alternatives. The application ensures consistency in the comparisons and provides sensitivity analysis to evaluate the impact of changing criteria weights.
@@ -71,8 +68,6 @@ The backend code follows a modular and organized structure, leveraging the power
 - Python 3.7+
 - PostgreSQL
 
-
-
 ### Setup
 
 1. **Clone the Repository:**
@@ -80,7 +75,6 @@ The backend code follows a modular and organized structure, leveraging the power
    git clone <repository_url>
    cd <project_folder>
 
-https://github.com/oussama-art/ahp_project/assets/59901157/229dbdc0-1d40-484a-8c03-f1b4cdf0f4e5
 
 
 Configure Database:
@@ -170,7 +164,8 @@ Make your changes and commit them (git commit -m 'Add new feature').
 Push to the branch (git push origin feature-branch).
 Create a new Pull Request.
 
+### Demonstration
+Click the link below to watch a demonstration video:
 
-
-### Technologies Used
+https://github.com/oussama-art/ahp_project/assets/59901157/82e90556-89ea-4ec3-b99c-750b880108e3
 
