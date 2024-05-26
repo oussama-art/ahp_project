@@ -162,6 +162,3 @@ Create a new branch (git checkout -b feature-branch).
 Make your changes and commit them (git commit -m 'Add new feature').
 Push to the branch (git push origin feature-branch).
 Create a new Pull Request.
-
-
-
