@@ -73,7 +73,7 @@ The backend code follows a modular and organized structure, leveraging the power
 ### Demonstration
 Click the link below to watch a demonstration video:
 
-https://github.com/oussama-art/ahp_project/blob/main/static/demo.mp4
+https://github.com/oussama-art/ahp_project/assets/59901157/82e90556-89ea-4ec3-b99c-750b880108e3
 
 ### Setup
 
