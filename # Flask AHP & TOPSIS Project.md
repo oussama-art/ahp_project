@@ -14,6 +14,8 @@ This project is a web application built with Flask that performs AHP (Analytic H
 - [Folder Structure](#folder-structure)
 - [Dependencies](#dependencies)
 - [Contributing](#contributing)
+- [Demonstration](#demonstration)
+
 
 ## Overview
 
@@ -67,6 +69,11 @@ The backend code follows a modular and organized structure, leveraging the power
 
 - Python 3.7+
 - PostgreSQL
+
+### Demonstration
+Click the link below to watch a demonstration video:
+
+https://github.com/oussama-art/ahp_project/blob/main/static/demo.mp4
 
 ### Setup
 
@@ -163,9 +170,6 @@ Push to the branch (git push origin feature-branch).
 Create a new Pull Request.
 
 
-# Video Demonstration
-
-Click the link below to watch a demonstration video:
+### Technologies Used
 
 
-https://github.com/oussama-art/ahp_project/blob/main/static/demo.mp4
